@@ -43,3 +43,6 @@ markers = [
     "bench: needs the olmocr checkout + bundled sample data (OLMOCR_PATH)",
     "live: calls a real language model (PARSEFLOW_LIVE_LLM=1 and ASK_PROVIDER configured)",
 ]
+
+[tool.vercel]
+entrypoint = "backend.app:app"

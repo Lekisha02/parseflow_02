@@ -23,7 +23,16 @@ from processing import assistant, block_ask, docfiles, engines, formats, llm
 import accounts, mailer
 
 VERSION = "2.6.0"
-DATA = Path(os.getenv("PARSEFLOW_DATA_DIR", str(ROOT/"data"))); DATA.mkdir(parents=True, exist_ok=True)
+def _init_data():
+    p = Path(os.getenv("PARSEFLOW_DATA_DIR", "/tmp/parseflow_data" if os.getenv("VERCEL") else str(ROOT/"data")))
+    try:
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    except OSError:
+        p = Path("/tmp/parseflow_data")
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+DATA = _init_data()
 MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "0") or 0)*1024*1024)        # 0 = no limit
 ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "1").lower() not in ("0", "false", "no", "off")   # one worker process per document
 JOB_TIMEOUT = float(os.getenv("PARSEFLOW_JOB_TIMEOUT", "0") or 0)                       # seconds; 0 = no limit
