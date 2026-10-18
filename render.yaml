@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: parseflow
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PARSEFLOW_DATA_DIR
+        value: /data
+      - key: PARSEFLOW_SECURE_COOKIE
+        value: "1"
+      - key: PARSEFLOW_TRUST_PROXY
+        value: "1"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ASK_PROVIDER
+        value: "gemini"
+      - key: ASK_MODEL
+        value: "gemini-3.5-flash-lite"
+      - key: ASK_VISION_MODEL
+        value: "gemini-3.5-flash-lite"

@@ -1,5 +1,7 @@
 # ParseFlow
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Lekisha02/parseflow_02)
+
 **ParseFlow** is a document-processing system developed by **Team DEADLOCK** for the **DQCL ParseAnything** problem statement at **DataQuest 3.0**.
 
 It reads PDFs, Word, PowerPoint and Excel files, images, text/Markdown/HTML and e-books (see [Input formats](#input-formats-processingformatspy)) that mix digital text, tables, scans, handwriting, equations, diagrams and charts, uses the right extractor for each region, and returns a structured **Digital Twin** (JSON) plus **canonical Markdown**, keeping the evidence behind every result: page, bounding box, extractor, confidence, verification status and warnings.
