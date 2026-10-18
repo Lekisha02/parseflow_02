@@ -1587,6 +1587,17 @@ def _extract_ocr_result(ctx, warnings, state, res, zoom):
     boxes_px = [tuple(v * Z for v in l.bbox) for l in lines]
     for r in detect_ink_regions(img, boxes_px):
         items.append(dict(kind="figure", bbox=tuple(v / Z for v in r), hint="unknown", ink=True))
+    # If OCR confidence is low (typical of handwriting/cursive or heavily degraded scans)
+    # and a vision model is active, hand over the page to Vision instead of keeping broken OCR text
+    if (res["conf"] < 0.65 or lenient) and vision.available() and state.get("vision_left", 0) > 0 and not native:
+        items = [dict(kind="figure", bbox=(0, 0, ctx["W"], ctx["H"]), hint="handwritten_text", ink=True)]
+        rest = []
+        aligned = []
+        ctx["text_segs"] = []
+        ctx["items"] = items
+        ctx["flags"] = dict(text_layer=False, scanned=True, tables=0, figures=0, visual_regions=1)
+        warnings.append(f"Page {n}: low OCR confidence ({res['conf']:.2f}) — transcribed using vision model.")
+        return
     ctx["items"] = items
     ctx["flags"] = dict(text_layer=bool(a.get("chars")), scanned=True, tables=len(aligned), figures=0,
                         visual_regions=sum(1 for i in items if i.get("ink")))
