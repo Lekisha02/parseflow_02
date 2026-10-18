@@ -417,23 +417,31 @@ def _submit(doc_id, src, name, uid=None):
 def _resume_interrupted():
     """After a restart: documents whose processing was cut off (an upload with no document.json yet) are queued
     again; saved slices (checkpoint/) mean they continue from where they stopped instead of page 1."""
-    if os.getenv("PARSEFLOW_RESUME", "1").lower() in ("0", "false", "no", "off"): return []
+    if os.getenv("VERCEL") or os.getenv("PARSEFLOW_RESUME", "1").lower() in ("0", "false", "no", "off"): return []
+    if not DATA or not DATA.exists(): return []
     resumed = []
-    for d in sorted(DATA.iterdir(), key=lambda p: p.stat().st_mtime if p.exists() else 0):
+    try:
+        entries = sorted(DATA.iterdir(), key=lambda p: p.stat().st_mtime if p.exists() else 0)
+    except Exception:
+        return []
+    for d in entries:
         try:
             if not (d.is_dir() and _safe_id(d.name)) or (d/"document.json").exists() or (d/"failed.json").exists() or d.name in JOBS: continue
             src = formats.source_file(d)
             if src is None: continue
             src = Path(src)
             name = formats.original_name(d) or src.name.split("_", 2)[-1]
-            uid = STORE.owner(d.name)
-            if uid: STORE.finish_document(d.name, "processing")
+            uid = STORE.owner(d.name) if STORE else None
+            if uid and STORE: STORE.finish_document(d.name, "processing")
             _submit(d.name, src, name, uid); resumed.append(d.name)
         except Exception:
             continue
     return resumed
 
-RESUMED = _resume_interrupted()
+try:
+    RESUMED = _resume_interrupted()
+except Exception:
+    RESUMED = []
 
 @app.get("/api/status/{doc_id}")
 def status(doc_id: str, request: Request):
@@ -656,6 +664,8 @@ def page_thumb(doc_id: str, n: int, request: Request):
     return FileResponse(p, media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
 
 def _mount_ui():
+    if os.getenv("VERCEL"):
+        return  # Vercel CDN serves public/ directly
     candidates = [
         ROOT / "frontend",
         ROOT / "public",
@@ -683,4 +693,20 @@ def _mount_ui():
     def _fallback_ui():
         return HTMLResponse("<!DOCTYPE html><html><head><title>ParseFlow</title></head><body><h1>ParseFlow API is running</h1><p><a href='/api/health'>Check /api/health</a></p></body></html>")
 
-_mount_ui()
+try:
+    _mount_ui()
+except Exception:
+    pass
+
+if _STARTUP_ERROR:
+    @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"])
+    def _startup_catchall(path_name: str):
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": "Startup Crash",
+                "details": _STARTUP_ERROR.splitlines()[-1] if _STARTUP_ERROR else "Unknown error",
+                "traceback": _STARTUP_ERROR.splitlines() if _STARTUP_ERROR else [],
+            },
+            status_code=500,
+        )
