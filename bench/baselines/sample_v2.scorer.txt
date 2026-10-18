@@ -1,0 +1,39 @@
+
+Running tests for each candidate:
+
+Evaluating candidate: parseflow
+
+Candidate: parseflow
+  [FAIL] Test mattsnotes_minediff_00 on mattsnotes page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'The-Stack-V2...' with threshold 1.0 but best match ratio was 0.750
+  [FAIL] Test mattsnotes_minediff_01 on mattsnotes page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'SE, whatever we've scraped...' with threshold 1.0 but best match ratio was 0.654
+  [FAIL] Test mattsnotes_minediff_02 on mattsnotes page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'HQ DCLM...' with threshold 1.0 but best match ratio was 0.714
+  [FAIL] Test mattsnotes_minediff_04 on mattsnotes page 3 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'ARCH + TRAINING...' with threshold 1.0 but best match ratio was 0.933
+  [FAIL] Test mattsnotes_minediff_03 on mattsnotes page 2 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'Order by repo...' with threshold 1.0 but best match ratio was 0.538
+  [FAIL] Test building_notes_00 on buildingnotes page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'master bath...' with threshold 1.0 but best match ratio was 0.625
+  [FAIL] Test building_notes_02 on buildingnotes page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'guest bath...' with threshold 1.0 but best match ratio was 0.400
+  [FAIL] Test building_notes_01 on buildingnotes page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'laundry...' with threshold 1.0 but best match ratio was 0.571
+  [FAIL] Test lincoln_letter_minediff_00 on lincoln_letter page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'January 10th 1864....' with threshold 1.0 but best match ratio was 0.389
+  [FAIL] Test lincoln_letter_minediff_01 on lincoln_letter page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'Major General Hitchcock, Commissioner of...' with threshold 1.0 but best match ratio was 0.500
+  [FAIL] Test lincoln_letter_minediff_03 on lincoln_letter page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'He is also directed to send forward the ...' with threshold 1.0 but best match ratio was 0.600
+  [FAIL] Test mathfuncs_01 on mathfuncs page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Could not find a location where 'Pythagorean Theorem...' appears before 'The Fundamental Theorem of Calculus...'.
+  [FAIL] Test test_graphical_text_00 on test-graphical-text page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'THE VISION...' with threshold 1.0 but best match ratio was 0.737
+  [FAIL] Test test_graphical_text_01 on test-graphical-text page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'by FutureSkill...' with threshold 1.0 but best match ratio was 0.214
+  [FAIL] Test small_page_size_01 on small_page_size page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: 'before' text 'Earthy and saline matter...' not found with max_l_dist 0
+  [FAIL] Test small_page_size_00 on small_page_size page 1 average pass ratio: 0.000 (0/1 repeats passed). Ex: Expected 'Since the use of bones has, however, bec...' with threshold 1.0 but best match ratio was 0.994
+  Average Score: 94.6% (95% CI: [92.3%, 97.0%]) over 120 tests.
+
+============================================================
+Final Summary with 95% Confidence Intervals:
+parseflow            : Average Score: 94.6% ± 2.4% (average of per-JSONL scores)
+    absent  : 100.0% average pass rate over 24 tests
+    baseline: 100.0% average pass rate over 21 tests
+    math    : 100.0% average pass rate over 12 tests
+    order   : 84.6% average pass rate over 13 tests
+    present : 53.3% average pass rate over 30 tests
+    table   : 100.0% average pass rate over 20 tests
+
+    Results by JSONL file:
+        baseline                      : 100.0% (20/20 tests)
+        blanks.jsonl                  : 100.0% (1/1 tests)
+        dataset.jsonl                 : 83.8% (83/99 tests)
+

@@ -1,0 +1,42 @@
+# HTTPS deployment: Caddy obtains and renews a certificate for PARSEFLOW_DOMAIN automatically (ports 80 and 443
+# must reach this machine and the domain's DNS must point here).
+#
+#   cd deploy && cp ../.env.example ../.env    # then edit ../.env (keys, SMTP, PARSEFLOW_PUBLIC_URL=https://your.domain)
+#   PARSEFLOW_DOMAIN=parseflow.example.org docker compose up -d --build
+#
+# Several ParseFlow servers: start them with the same DATABASE_URL (the 'postgres' profile below, or a managed
+# PostgreSQL) and the same /data volume (a shared disk such as NFS/EFS), behind one proxy.
+services:
+  parseflow:
+    build: ..
+    env_file: ../.env
+    environment:
+      PARSEFLOW_SECURE_COOKIE: "1"
+      PARSEFLOW_TRUST_PROXY: "1"
+    volumes:
+      - parseflow-data:/data
+    restart: unless-stopped
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment:
+      PARSEFLOW_DOMAIN: ${PARSEFLOW_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on: [parseflow]
+    restart: unless-stopped
+  postgres:                      # optional: docker compose --profile postgres up -d, then set
+    image: postgres:16           # DATABASE_URL=postgresql://parseflow:parseflow@postgres:5432/parseflow in ../.env
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: parseflow
+      POSTGRES_PASSWORD: parseflow
+      POSTGRES_DB: parseflow
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  parseflow-data:
+  caddy-data:
+  pg-data:

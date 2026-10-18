@@ -1,0 +1,133 @@
+{
+ "started": "2026-10-13T09:27:19.337132+00:00",
+ "candidate": "parseflow_legacy_plain",
+ "impl": "legacy",
+ "legacy_md": "plain",
+ "bench_dir": "/home/claude/benchwork/sample",
+ "jsonl_files": [
+  "blanks.jsonl",
+  "dataset.jsonl"
+ ],
+ "n_pdfs": 21,
+ "n_tests": 100,
+ "hardware": {
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "logical_cores": 2,
+  "ram_gb": 7.8,
+  "os": "Linux-6.18.44-fc-v114-x86_64-with-glibc2.39",
+  "python": "3.13.16",
+  "pymupdf": "1.28.2",
+  "tesseract": "tesseract 5.3.4"
+ },
+ "config": {},
+ "vision_configured": false,
+ "annotated_markdown": false,
+ "timeout_s": 180,
+ "latency": {
+  "per_page_median": 0.49648784900000464,
+  "per_page_p90": 1.8178574020002998,
+  "per_page_p95": 3.2473128920000818,
+  "per_page_max": 11.814680532000239,
+  "per_page_mean": 1.2633348138570433,
+  "documents": 21,
+  "pages": 23,
+  "wall_seconds": 25.91,
+  "workers": 2,
+  "throughput_pages_per_s": 0.888,
+  "method": "time inside each worker around the conversion call (excludes process spawn and imports); each document runs in a fresh process (cold caches); outputs written after timing"
+ },
+ "slowest": [
+  {
+   "pdf": "lincoln_letter.pdf",
+   "seconds": 11.815
+  },
+  {
+   "pdf": "mattsnotes.pdf",
+   "seconds": 3.994
+  },
+  {
+   "pdf": "buildingnotes.pdf",
+   "seconds": 3.247
+  },
+  {
+   "pdf": "test-graphical-text.pdf",
+   "seconds": 1.818
+  },
+  {
+   "pdf": "blank_book_pg1.pdf",
+   "seconds": 0.902
+  },
+  {
+   "pdf": "mathfuncs.pdf",
+   "seconds": 0.835
+  },
+  {
+   "pdf": "mathfuncs_colswitch.pdf",
+   "seconds": 0.834
+  },
+  {
+   "pdf": "headers_footers/ff518b1240a66978f22035528ccb029450b5_pg2.pdf",
+   "seconds": 0.698
+  },
+  {
+   "pdf": "discoverworld_crazy_table4.pdf",
+   "seconds": 0.605
+  },
+  {
+   "pdf": "headers_footers/ff1fc6a205ad039139ce566851b6b260c929_pg1.pdf",
+   "seconds": 0.536
+  }
+ ],
+ "errors": [],
+ "timeouts": 0,
+ "scorer": {
+  "command": "/usr/bin/python3 -m olmocr.bench.benchmark --dir /home/claude/benchwork/sample --candidate parseflow_legacy_plain",
+  "exit_code": 0,
+  "overall": 78.1,
+  "ci": 3.0,
+  "per_jsonl": {
+   "baseline": {
+    "score": 100.0,
+    "passed": 20,
+    "tests": 20
+   },
+   "blanks.jsonl": {
+    "score": 100.0,
+    "passed": 1,
+    "tests": 1
+   },
+   "dataset.jsonl": {
+    "score": 34.3,
+    "passed": 34,
+    "tests": 99
+   }
+  },
+  "per_test_type": {
+   "absent": {
+    "score": 33.3,
+    "tests": 24
+   },
+   "baseline": {
+    "score": 100.0,
+    "tests": 21
+   },
+   "math": {
+    "score": 0.0,
+    "tests": 12
+   },
+   "order": {
+    "score": 46.2,
+    "tests": 13
+   },
+   "present": {
+    "score": 33.3,
+    "tests": 30
+   },
+   "table": {
+    "score": 50.0,
+    "tests": 20
+   }
+  },
+  "raw_output": "bench/baselines/sample_v1_legacy_plain.scorer.txt"
+ }
+}

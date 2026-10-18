@@ -1,0 +1,882 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>ParseFlow — Evidence-preserving document intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0b0d;--p:#111316;--p2:#171a1e;--bd:#25292f;--tx:#e8eaed;--mu:#8a919b;--ac:#6ea8fe;--ok:#3ecf8e;--wn:#f5b942;--er:#f2686b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f7f9;--p:#fff;--p2:#f0f2f5;--bd:#d9dde3;--tx:#15181c;--mu:#667080;--ac:#2563eb;--ok:#0f9d63;--wn:#b7791f;--er:#d33}}
+*{box-sizing:border-box}html,body{margin:0;height:100%}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--tx);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}button{font:inherit;color:inherit;cursor:pointer}
+.btn{background:var(--p2);border:1px solid var(--bd);padding:7px 14px;border-radius:6px;transition:.15s}.btn:hover{border-color:var(--ac)}
+.btn.pri{background:var(--tx);color:var(--bg);border-color:var(--tx);font-weight:500}.btn.sm{padding:3px 9px;font-size:12px}
+.view{display:none;height:100%;overflow:auto}.view.on{display:block}
+/* landing */
+.hero{max-width:900px;margin:0 auto;padding:9vh 24px 40px;text-align:center}
+.hero h1{font-size:56px;letter-spacing:-2px;margin:10px 0 0;font-weight:600}.tag{color:var(--ac);font-size:18px;margin:6px 0 18px}
+.hero p{color:var(--mu);max-width:620px;margin:0 auto 28px;font-size:16px}
+.pipe{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:44px 0 8px}
+.pipe span{border:1px solid var(--bd);background:var(--p);padding:6px 11px;border-radius:5px;font:12px 'JetBrains Mono',monospace;color:var(--mu)}
+.pipe i{color:var(--bd);align-self:center;font-style:normal}
+.drop{margin:30px auto 0;max-width:560px;border:1px dashed var(--bd);border-radius:10px;padding:26px;color:var(--mu);transition:.15s}.drop.hv{border-color:var(--ac);background:var(--p)}
+.err{max-width:560px;margin:16px auto 0;text-align:left;border:1px solid var(--er);background:var(--p);border-radius:8px;padding:12px 16px}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:900px;margin:36px auto;padding:0 24px}
+.card{background:var(--p);border:1px solid var(--bd);border-radius:8px;padding:14px}.card h4{margin:0 0 4px;font-size:13px}.card p{margin:0;color:var(--mu);font-size:12.5px}
+/* processing */
+.proc{max-width:520px;margin:12vh auto;padding:0 24px}.st{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--bd);align-items:center}
+.st b{width:22px;text-align:center;color:var(--mu)}.st.dn b{color:var(--ok)}.st.run b{color:var(--ac);animation:sp 1s linear infinite;display:inline-block}.st small{color:var(--mu);margin-left:auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* app */
+.app{display:none;height:100%;grid-template-rows:48px 1fr}.app.on{display:grid}
+.top{display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--bd);background:var(--p)}.top .fn{color:var(--mu);font-size:13px}
+.demo{font-size:11px;color:var(--wn);border:1px solid var(--wn);padding:1px 7px;border-radius:4px}
+.main{display:grid;grid-template-columns:150px 1fr minmax(380px,430px);min-height:0}
+.thumbs{border-right:1px solid var(--bd);overflow:auto;padding:10px;background:var(--p)}
+.th{border:1px solid var(--bd);border-radius:5px;margin-bottom:10px;padding:4px;cursor:pointer;text-align:center;font-size:11px;color:var(--mu)}.th.on{border-color:var(--ac);color:var(--tx)}.th svg,.th .thi{width:100%;display:block;background:#fff;border-radius:2px}
+.vw{overflow:auto;padding:18px;background:var(--bg);position:relative}.vw .bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;color:var(--mu);font-size:12px}
+.page{max-width:620px;margin:0 auto;box-shadow:0 8px 40px #0008}.page svg{display:block;width:100%;background:#fff}
+.bb{fill:transparent;stroke-width:1.6;cursor:pointer;transition:.12s}.bb:hover{fill:#6ea8fe22}.bb.sel{fill:#6ea8fe33;stroke-width:3}
+.bb.pulse{animation:pl .5s 3}@keyframes pl{50%{fill:#f5b94277}}
+.rt{border-left:1px solid var(--bd);background:var(--p);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--bd)}.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 11px;color:var(--mu);white-space:nowrap;font-size:13px}.tabs button.on{color:var(--tx);border-color:var(--ac)}
+.pane{overflow:auto;padding:14px;flex:1}
+.k{color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.6px;margin:12px 0 3px}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--bd)}.verified{color:var(--ok);border-color:var(--ok)}.review{color:var(--wn);border-color:var(--wn)}.failed{color:var(--er);border-color:var(--er)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:var(--p2);border:1px solid var(--bd);border-radius:6px;padding:9px}.stat b{font-size:22px;display:block}.stat span{color:var(--mu);font-size:11px}
+.row{border:1px solid var(--bd);border-radius:6px;padding:9px 10px;margin-bottom:7px;cursor:pointer;background:var(--p2)}.row:hover{border-color:var(--ac)}.row .h{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mu)}.row p{margin:4px 0 0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}.chips button{font-size:11px;padding:2px 9px;border-radius:12px;border:1px solid var(--bd);background:none;color:var(--mu)}.chips button.on{color:var(--tx);border-color:var(--ac)}
+pre{background:var(--p2);border:1px solid var(--bd);border-radius:6px;padding:10px;overflow:auto;font:12px/1.5 'JetBrains Mono',monospace;margin:4px 0;white-space:pre-wrap;word-break:break-word}
+table.t{border-collapse:collapse;width:100%;font-size:12.5px}.t th,.t td{border:1px solid var(--bd);padding:4px 8px;text-align:left}.t th{background:var(--p2)}
+details{margin:3px 0}summary{cursor:pointer;color:var(--ac)}.js-k{color:#9cdcfe}.js-s{color:#ce9178}.js-n{color:#b5cea8}
+.ask{display:flex;gap:6px;margin-bottom:10px}.ask input{flex:1;background:var(--p2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);padding:8px 10px;font:inherit}
+.flow{display:flex;gap:6px;align-items:center;font-size:12px}.bar2{height:5px;border-radius:3px;background:var(--bd);overflow:hidden;margin-top:4px}.bar2 i{display:block;height:100%}
+.ans .at{white-space:pre-line;line-height:1.6;margin:4px 0}.ans .ah{font-weight:600;margin:8px 0 2px}.ans .am{overflow-x:auto;margin:6px 0}.ans .al{margin:4px 0 6px 18px;padding:0;line-height:1.6}.ans .acode,.ans details pre{white-space:pre;overflow:auto;font-size:12px}.ans .atw{overflow-x:auto;margin:6px 0}.t td.hit{background:#6ea8fe2e;outline:1px solid var(--ac);font-weight:600}.an{color:var(--mu);font-size:12px;margin-top:4px}.evr{margin:5px 0}.evs{color:var(--mu);font-size:12px;margin:2px 0 6px;line-height:1.45}.amr{background:var(--p2);border:1px solid var(--bd);border-radius:6px;padding:8px 10px;overflow-x:auto;line-height:1.6}.ans details summary{font-size:12px;margin-top:2px}.katex{font-size:1.08em}
+@media(max-width:1000px){.main{grid-template-columns:100px 1fr 340px}.hero h1{font-size:40px}}
+
+:root{--ac2:#a78bfa;--glass:#ffffff08}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:6px}::-webkit-scrollbar-track{background:transparent}
+#landing{background:radial-gradient(900px 420px at 50% -80px,#6ea8fe26,transparent 70%),radial-gradient(500px 300px at 85% 10%,#a78bfa1a,transparent 70%),radial-gradient(#ffffff0d 1px,transparent 1px) 0 0/24px 24px,var(--bg);scroll-behavior:smooth}
+.nav{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;padding:18px 24px}
+.logo{display:flex;gap:9px;align-items:center;font-weight:600;letter-spacing:-.3px}.logo svg{width:26px;height:26px}
+.cap{font:11px 'JetBrains Mono',monospace;color:var(--mu);border:1px solid var(--bd);border-radius:20px;padding:3px 11px;background:var(--glass)}.cap i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;background:var(--mu)}.cap.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}.cap.off i{background:var(--wn)}
+.badge{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--bd);background:var(--glass);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--mu);margin-bottom:22px}.badge i{width:6px;height:6px;border-radius:50%;background:var(--ac);box-shadow:0 0 10px var(--ac)}
+.hero{padding-top:3vh!important}.hero h1{font-size:76px!important;letter-spacing:-3.5px!important;background:linear-gradient(180deg,var(--tx),#9aa4b5);-webkit-background-clip:text;background-clip:text;color:transparent}.hero h1 span{background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{font-size:20px!important;font-weight:500}.cta{display:flex;gap:10px;justify-content:center}.btn.pri{box-shadow:0 0 0 1px #fff2,0 8px 30px #6ea8fe33}.btn{padding:9px 18px}.btn:hover{transform:translateY(-1px)}
+.drop{display:flex;gap:12px;align-items:center;justify-content:center;background:var(--glass);cursor:pointer}.drop svg{width:22px;height:22px;stroke:var(--ac);fill:none;stroke-width:1.7}.drop:hover{border-color:var(--ac)}.drop b{color:var(--tx);font-weight:500}
+.show{max-width:1000px;margin:20px auto 0;padding:0 24px}.mock{display:grid;grid-template-columns:260px 1fr;gap:0;border:1px solid var(--bd);border-radius:14px;background:var(--p);overflow:hidden;box-shadow:0 30px 80px #0009,0 0 0 1px #ffffff08 inset}
+.mock .l{padding:16px;background:var(--bg);border-right:1px solid var(--bd)}.mock .l svg{width:100%;display:block;border-radius:3px;box-shadow:0 6px 24px #0008}.mock .r{padding:16px 20px;text-align:left}
+.mock pre{background:transparent;border:0;padding:0;font-size:12px;margin:0}.mock .bar0{display:flex;gap:6px;margin-bottom:12px}.mock .bar0 i{width:9px;height:9px;border-radius:50%;background:var(--bd)}
+.pipe{max-width:1000px;margin:46px auto 0!important;padding:0 24px;flex-wrap:wrap}.pipe span{animation:lit 7s infinite;background:var(--p)}.pipe span:nth-child(3){animation-delay:.9s}.pipe span:nth-child(5){animation-delay:1.8s}.pipe span:nth-child(7){animation-delay:2.7s}.pipe span:nth-child(9){animation-delay:3.6s}.pipe span:nth-child(11){animation-delay:4.5s}.pipe span:nth-child(13){animation-delay:5.4s}.pipe span:nth-child(1){animation-delay:0s}
+@keyframes lit{0%,12%,100%{border-color:var(--bd);color:var(--mu);box-shadow:none}4%,8%{border-color:var(--ac);color:var(--tx);box-shadow:0 0 18px #6ea8fe40}}
+.feat{max-width:1000px!important;padding:0 24px!important;margin:40px auto 60px!important;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))!important}.feat .card{background:var(--p);padding:18px;transition:.2s}.feat .card:hover{transform:translateY(-3px);border-color:#6ea8fe66}.feat .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,#6ea8fe26,#a78bfa26);border:1px solid #6ea8fe44;margin-bottom:10px}.feat .ic svg{width:18px;height:18px;stroke:var(--ac);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.feat h4{font-size:14px!important}
+.pcard{border:1px solid var(--bd);background:var(--p);border-radius:12px;padding:16px;margin-bottom:18px}.pcard .nm{font-weight:500;font-size:15px}.pcard .mt{display:flex;gap:14px;flex-wrap:wrap;color:var(--mu);font:12px 'JetBrains Mono',monospace;margin-top:4px}.up{height:5px;border-radius:3px;background:var(--bd);margin-top:12px;overflow:hidden}.up i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .2s}
+.st small{max-width:230px;text-align:right}.st.dn{color:var(--tx)}.st.run{color:var(--tx)}.st span.mono{width:84px}
+.top{background:linear-gradient(180deg,var(--p),var(--bg))}.top .logo{font-size:14px}.top .logo svg{width:20px;height:20px}
+.thumbs{background:var(--p)}.th{transition:.15s}.th:hover{border-color:#6ea8fe66}.th.on{box-shadow:0 0 0 1px var(--ac),0 0 20px #6ea8fe22}
+.vw{background:radial-gradient(#ffffff09 1px,transparent 1px) 0 0/18px 18px,var(--bg)}.page{box-shadow:0 20px 70px #000a,0 0 0 1px #ffffff12;border-radius:2px;overflow:hidden}
+.tabs button{position:relative}.tabs button.on{color:var(--tx)}.tabs button.on:after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:2px;box-shadow:0 0 10px var(--ac)}.tabs button{border-bottom:0!important}
+.pane{animation:fd .25s}@keyframes fd{from{opacity:0;transform:translateY(4px)}}
+.stat{position:relative;overflow:hidden}.stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac)}.stat.g:before{background:var(--ok)}.stat.w:before{background:var(--wn)}.stat b{font-size:26px;letter-spacing:-1px}
+.row{transition:.15s}.row:hover{transform:translateX(2px);background:var(--p)}
+.ringw{display:flex;gap:14px;align-items:center;margin:6px 0}.ring{--c:var(--ac);width:62px;height:62px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--bd) 0);display:grid;place-items:center;flex:none}.ring b{width:50px;height:50px;border-radius:50%;background:var(--p);display:grid;place-items:center;font-size:14px}
+.pill:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+.fl{display:flex;gap:5px;flex-wrap:wrap}.fl span{font-size:11px;padding:1px 8px;border-radius:10px;background:var(--p2);border:1px solid var(--bd);color:var(--mu)}
+.bb{rx:2}.lab{font:600 11px 'JetBrains Mono',monospace;pointer-events:none}
+.warn{border:1px solid #f5b94255;background:#f5b94210;border-radius:6px;padding:7px 10px;margin:6px 0;font-size:12.5px}
+@media(max-width:700px){.hero h1{font-size:48px!important}.mock{grid-template-columns:1fr}.mock .l{display:none}}
+
+#landing{position:relative}.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.28;pointer-events:none;animation:fl 14s ease-in-out infinite alternate}.o1{width:420px;height:420px;background:#6ea8fe;top:-120px;left:6%}.o2{width:360px;height:360px;background:#a78bfa;top:60px;right:4%;animation-delay:-6s}@keyframes fl{to{transform:translate(50px,40px) scale(1.2)}}
+.hero,.nav,.show,.pipe,.feat{position:relative;z-index:1}
+.btn.go{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0a0b0d;border:0;font-weight:600;box-shadow:0 8px 34px #6ea8fe55}
+.mock{transition:transform .4s}.mock:hover{transform:perspective(1200px) rotateX(2deg) translateY(-4px)}
+.tour{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(700px,92vw);background:color-mix(in srgb,var(--p) 92%,transparent);backdrop-filter:blur(14px);border:1px solid var(--ac);border-radius:14px;padding:14px 18px;z-index:50;box-shadow:0 24px 70px #000b,0 0 40px #6ea8fe30;display:none;animation:up .3s}.tour.on{display:block}@keyframes up{from{opacity:0;transform:translate(-50%,10px)}}
+.tour .sn{font:11px 'JetBrains Mono',monospace;color:var(--ac);letter-spacing:.5px}.tour h4{margin:2px 0;font-size:16px}.tour p{margin:2px 0 12px;font-size:14px;color:var(--mu)}.tour .ctl{display:flex;gap:8px;align-items:center}.tour .dots{display:flex;gap:5px;margin-right:auto}.tour .dots i{width:18px;height:3px;border-radius:2px;background:var(--bd)}.tour .dots i.on{background:var(--ac)}.tour kbd{font:11px 'JetBrains Mono',monospace;border:1px solid var(--bd);border-radius:4px;padding:0 5px;color:var(--mu)}
+/* ---------------- landing (v2.1) ---------------- */
+#landing{background:var(--bg)}
+.lp-top{position:relative;background:radial-gradient(900px 460px at 50% -60px,#6ea8fe2e,transparent 70%),radial-gradient(520px 320px at 88% 6%,#a78bfa22,transparent 70%),radial-gradient(#ffffff0d 1px,transparent 1px) 0 0/24px 24px,var(--bg);padding-bottom:28px}
+.lp-nav{display:flex;align-items:center;gap:22px;padding:16px clamp(16px,4vw,56px);border-bottom:1px solid #ffffff0d;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 70%,transparent)}
+.lp-logo{display:flex;gap:10px;align-items:center;font-weight:650;font-size:19px;letter-spacing:-.3px;color:var(--tx);text-decoration:none}.lp-logo svg{width:30px;height:30px;flex:none}.lp-logo.sm{font-size:15px}.lp-logo.sm svg{width:22px;height:22px}
+.lp-links{display:flex;gap:24px;margin-left:18px}.lp-links a{color:var(--mu);text-decoration:none;font-size:14px}.lp-links a:hover{color:var(--tx)}
+.lp-sp{flex:1}.lp-auth{display:flex;gap:8px;align-items:center}
+.btn.ghost{background:transparent}
+.lp-hero{display:grid;grid-template-columns:minmax(360px,460px) minmax(0,1fr);gap:44px;padding:44px clamp(16px,4vw,56px) 0;align-items:start;max-width:1440px;margin:0 auto}
+.lp-badge{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--bd);background:#ffffff08;border-radius:20px;padding:5px 14px;font-size:12.5px;color:var(--mu)}.lp-badge i{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 10px var(--ac)}
+.lp-h1{font-size:clamp(40px,4.6vw,64px);line-height:1.03;letter-spacing:-2.4px;margin:20px 0 14px;font-weight:700;background:linear-gradient(180deg,var(--tx),#9aa4b5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lp-h1 span{background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lp-sub{color:var(--mu);font-size:17px;margin:0 0 24px}
+.lp-up{border:1px solid var(--bd);background:var(--p);border-radius:14px;padding:16px;box-shadow:0 20px 60px #0006}
+.lp-uprow{display:flex;gap:10px}.lp-big{flex:1;justify-content:center;padding:12px!important;font-size:15px}.lp-big2{padding:12px 16px!important}
+.lp-opts{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lp-opt{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--mu);text-align:left;background:transparent;line-height:1.4}.lp-opt b{color:var(--tx);display:block;font-size:13px;margin-bottom:2px;font-weight:600}
+.lp-opt.on{border-color:#6ea8fe77;background:#6ea8fe12}button.lp-opt:hover{border-color:var(--ac)}
+.lp-fmts{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;align-items:center}.lp-fmts span{font:11.5px 'JetBrains Mono',monospace;color:var(--mu);border:1px solid var(--bd);border-radius:5px;padding:2px 8px}.lp-fmts em{font-style:normal;color:var(--mu);font-size:12px}
+#uerr .err{margin:14px 0 0;max-width:none}
+/* banner */
+.lp-banner{border:1px solid var(--bd);border-radius:18px;background:var(--p);overflow:hidden;box-shadow:0 30px 90px #000a,0 0 0 1px #ffffff08 inset}
+.bn-h{display:flex;align-items:center;gap:9px;padding:11px 16px;border-bottom:1px solid var(--bd);font-size:12.5px;white-space:nowrap;overflow:hidden}.bn-mu{color:var(--mu)}
+.bn-live{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-weight:600;letter-spacing:.4px}.bn-live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:bnp 1.6s infinite}@keyframes bnp{50%{opacity:.35}}
+.bn-slide{display:grid;grid-template-columns:minmax(200px,38%) 1fr;height:400px}
+.bn-doc{background:var(--p2);border-right:1px solid var(--bd);padding:20px;position:relative;overflow:hidden}
+.bn-paper{background:#fff;border-radius:3px;height:100%;padding:16px;position:relative;box-shadow:0 10px 30px #000a;overflow:hidden;animation:bnin .5s ease}
+.bn-out{padding:20px 24px;position:relative;overflow:hidden;animation:bnin .5s ease .08s both}
+@keyframes bnin{from{opacity:0;transform:translateY(10px)}}
+.bn-out h3{margin:0 0 4px;font-size:21px;letter-spacing:-.5px}.bn-out .bn-d{color:var(--mu);font-size:13.5px;margin-bottom:4px}
+.bn-k{color:var(--mu);font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;margin:14px 0 6px;display:flex;gap:8px;align-items:center}
+.bn-out pre{margin:0;font-size:11.5px;max-height:150px;overflow:hidden}
+.bn-out table.t{font-size:12.5px}
+.ln{height:6px;background:#d6d9de;border-radius:2px;margin:6px 0}.ln.h{height:9px;background:#9aa1ab;width:70%}
+.hl{position:absolute;border:2.5px solid var(--ok);background:#3ecf8e22;border-radius:3px;animation:hlp 2.2s ease-in-out infinite}.hl.sel{border-color:var(--ac);background:#6ea8fe26;box-shadow:0 0 0 4px #6ea8fe22}.hl.w{border-color:var(--wn);background:#f5b94222;border-style:dashed}.hl.e{border-color:var(--er);background:#f2686b1c;border-style:dashed}
+@keyframes hlp{50%{box-shadow:0 0 0 6px #6ea8fe18}}
+.hl-tag{position:absolute;font:600 10.5px 'JetBrains Mono',monospace;background:var(--ac);color:#0a0b0d;padding:1px 6px;border-radius:3px;z-index:2}.hl-tag.w{background:var(--wn)}.hl-tag.e{background:var(--er)}.hl-tag.g{background:var(--ok)}
+.bn-tbl{margin-top:12px;border-top:1.5px solid #333;border-bottom:1.5px solid #333;padding:4px 0}.bn-tbl div{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:6px;margin:5px 0}.bn-tbl div span{height:5px;background:#b9bec6;border-radius:2px}.bn-tbl div.h span{background:#555}
+.bn-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.bn-chip{display:inline-flex;gap:6px;align-items:center;font-size:12px;border:1px solid var(--bd);border-radius:14px;padding:3px 10px;margin:0 6px 6px 0;color:var(--mu);background:var(--p2)}.bn-chip b{color:var(--tx);font-weight:600}
+.bn-q{display:inline-block;background:var(--p2);border:1px solid var(--bd);border-radius:12px 12px 12px 3px;padding:7px 12px;font-size:13px}
+.bn-a{border-left:3px solid var(--ac);padding:4px 0 4px 12px;margin-top:10px;font-size:14px;line-height:1.6}
+.bn-step{display:flex;gap:8px;align-items:center;font-size:12.5px;margin:5px 0;color:var(--mu)}.bn-step b{color:var(--tx);font-weight:550}.bn-step i{font-style:normal;color:var(--ok)}
+.bn-scan{background:#e9e4d6!important;filter:contrast(.8);transform:rotate(-1.6deg)}.bn-scan .ln{background:#8c8778}.bn-scan:after{content:"";position:absolute;inset:0;background:radial-gradient(#0002 1px,transparent 1.5px) 0 0/7px 7px,radial-gradient(#0001 1px,transparent 1px) 3px 4px/11px 11px;pointer-events:none}
+.bn-hand{font:500 22px Caveat,'Comic Sans MS',cursive;color:#1e3a8a;line-height:1.2}
+.bn-f{display:flex;align-items:center;gap:12px;padding:11px 16px;border-top:1px solid var(--bd);flex-wrap:wrap}
+.bn-arrow{width:30px;height:30px;border-radius:50%;border:1px solid var(--bd);display:grid;place-items:center;color:var(--mu);font-size:15px;background:transparent;padding:0}.bn-arrow:hover{color:var(--tx);border-color:var(--ac)}
+.bn-dots{display:flex;gap:6px}.bn-dots button{width:26px;height:4px;border-radius:2px;background:var(--bd);border:0;padding:0;position:relative;overflow:hidden}.bn-dots button.done{background:var(--ac)}
+.bn-dots button.on:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transform-origin:left;animation:bnfill var(--bnt,5.5s) linear forwards}.lp-banner.paused .bn-dots button.on:after{animation-play-state:paused}
+@keyframes bnfill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.bn-labels{color:var(--mu);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 200px}.bn-labels b{color:var(--tx);font-weight:550}.bn-labels span{cursor:pointer}.bn-labels span:hover{color:var(--tx)}
+/* ticker */
+.lp-ticker{margin:26px clamp(16px,4vw,56px) 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:12px 0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.lp-track{display:flex;gap:12px;width:max-content;animation:mq 46s linear infinite}.lp-ticker:hover .lp-track{animation-play-state:paused}
+.lp-track span{font-size:13px;color:var(--mu);border:1px solid var(--bd);border-radius:20px;padding:5px 14px;background:#ffffff05;white-space:nowrap}.lp-track span b{color:var(--tx);font-weight:550}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* sections */
+.lp-sec{padding:76px clamp(16px,4vw,56px) 10px;max-width:1440px;margin:0 auto}
+.lp-eye{font:600 12px 'JetBrains Mono',monospace;color:var(--ac);letter-spacing:1.5px;text-transform:uppercase}
+.lp-h2{font-size:clamp(28px,3vw,40px);letter-spacing:-1.4px;margin:10px 0}
+.lp-lead{color:var(--mu);font-size:16.5px;max-width:720px;margin:0}
+.lp-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:32px}
+.lp-card{background:var(--p);border:1px solid var(--bd);border-radius:14px;padding:22px;transition:.2s}.lp-card:hover{transform:translateY(-3px);border-color:#6ea8fe66}
+.lp-card h4{margin:12px 0 6px;font-size:16px}.lp-card p{margin:0;color:var(--mu);font-size:14px}
+.lp-ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,#6ea8fe26,#a78bfa26);border:1px solid #6ea8fe44}
+.lp-ic svg{width:20px;height:20px;stroke:var(--ac);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.lp-pipe{display:flex;align-items:stretch;gap:10px;margin-top:32px;flex-wrap:wrap}
+.lp-pipe .s{background:var(--p);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;flex:1 1 130px;animation:lit2 10.5s infinite}
+.lp-pipe .s b{display:block;font:600 13px 'JetBrains Mono',monospace;color:var(--tx)}.lp-pipe .s small{color:var(--mu);font-size:12px}
+@keyframes lit2{0%,14%,100%{border-color:var(--bd);box-shadow:none}3%,11%{border-color:var(--ac);box-shadow:0 0 22px #6ea8fe33}}
+.lp-drop{margin:32px 0 0;border:2px dashed #6ea8fe55;border-radius:20px;background:radial-gradient(500px 220px at 50% 0,#6ea8fe14,transparent 70%),var(--p);padding:52px 24px;text-align:center;cursor:pointer;transition:.15s}
+.lp-drop:hover,.lp-drop.hv{border-color:var(--ac);background:radial-gradient(500px 220px at 50% 0,#6ea8fe26,transparent 70%),var(--p)}
+.lp-dropic{width:64px;height:64px;margin:0 auto 14px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ac),var(--ac2))}
+.lp-dropic svg{width:30px;height:30px;stroke:#0a0b0d;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.lp-drop h3{font-size:26px;margin:0 0 6px;letter-spacing:-.6px}.lp-drop p{color:var(--mu);margin:0}.lp-drop u{color:var(--ac)}
+.lp-fmt{display:flex;justify-content:center;gap:8px;margin:18px 0 22px;flex-wrap:wrap}.lp-fmt span{font:600 12.5px 'JetBrains Mono',monospace;border:1px solid var(--bd);background:var(--p2);border-radius:7px;padding:6px 12px}.lp-fmt .lp-fmt2{font-weight:400;color:var(--mu)}
+.lp-dropbtns{display:inline-flex;justify-content:center;gap:12px;flex-wrap:wrap;cursor:default}
+.lp-note{color:var(--mu);font-size:12.5px;margin-top:14px}
+.lp-foot{border-top:1px solid var(--bd);margin-top:76px;padding:24px clamp(16px,4vw,56px);color:var(--mu);font-size:13px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.lp-foot a{color:var(--mu)}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--ac2));display:grid;place-items:center;font-weight:700;color:#0a0b0d;font-size:12.5px;flex:none}
+/* ---------------- workspace ---------------- */
+.wsv{display:none;height:100%;grid-template-columns:252px minmax(0,1fr)}.wsv.on{display:grid}
+.ws-side{background:var(--p);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:18px 14px;min-height:0;overflow:auto}
+.ws-side .lp-logo{padding:2px 8px 18px;font-size:18px}.ws-side .lp-logo svg{width:28px;height:28px}
+.ws-upbtn{justify-content:center;padding:11px!important;display:flex}
+.ws-nav{margin-top:14px;display:flex;flex-direction:column;gap:2px}
+.ws-it{display:flex;gap:11px;align-items:center;padding:8px 10px;border-radius:8px;color:var(--mu);background:none;border:0;text-align:left;font-size:13.5px;width:100%}.ws-it:hover{color:var(--tx);background:var(--p2)}
+.ws-it.on{background:#6ea8fe14;color:var(--tx);box-shadow:inset 2px 0 0 var(--ac)}
+.ws-it svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ws-it em{margin-left:auto;font-style:normal;font-size:11.5px;color:var(--mu);background:var(--p2);border:1px solid var(--bd);border-radius:10px;padding:0 7px}
+.ws-it span.nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-lab{font:600 11px 'JetBrains Mono',monospace;color:var(--mu);letter-spacing:1px;text-transform:uppercase;margin:20px 10px 0}
+.ws-recent{margin-top:6px}.ws-recent .ws-it{padding:6px 10px;font-size:13px}
+.ws-store{border:1px solid var(--bd);border-radius:10px;padding:11px 12px;margin:16px 0 12px;font-size:12.5px;color:var(--mu)}.ws-store b{color:var(--tx);font-weight:600}
+.ws-me{display:flex;gap:10px;align-items:center;border-top:1px solid var(--bd);padding:12px 4px 0}.ws-me .btn{white-space:nowrap;flex:none}.ws-me .who{min-width:0}.ws-me .who div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.ws-head{display:flex;align-items:center;gap:12px;padding:14px 28px;border-bottom:1px solid var(--bd);background:linear-gradient(180deg,var(--p),var(--bg))}
+.ws-search{flex:1;max-width:520px;display:flex;gap:8px;align-items:center;background:var(--p2);border:1px solid var(--bd);border-radius:9px;padding:0 12px;color:var(--mu)}.ws-search svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex:none}.ws-search input{flex:1;background:transparent;border:0;color:var(--tx);padding:9px 0;font:inherit;outline:none}
+#wserr .err{margin:14px 28px 0;max-width:none}
+.ws-body{flex:1;overflow:auto;padding:24px 28px}
+.ws-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;align-items:start}
+.ws-h2{margin:0;font-size:26px;letter-spacing:-.8px}
+.ws-chips{display:flex;gap:6px;margin:14px 0 16px;flex-wrap:wrap}.ws-chips button{font-size:12px;padding:4px 12px;border-radius:14px;border:1px solid var(--bd);color:var(--mu);background:none}.ws-chips button.on{color:var(--tx);border-color:var(--ac);background:#6ea8fe12}
+.ws-drop{border:1.5px dashed #6ea8fe55;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;background:radial-gradient(400px 120px at 20% 0,#6ea8fe12,transparent),var(--p);margin-bottom:18px;cursor:pointer;transition:.15s}.ws-drop:hover,.ws-drop.hv{border-color:var(--ac)}
+.ws-drop .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ac),var(--ac2));flex:none}.ws-drop .ic svg{width:20px;height:20px;stroke:#0a0b0d;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+table.ws-t{width:100%;border-collapse:collapse}
+.ws-t th{font:600 11px 'JetBrains Mono',monospace;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--bd)}
+.ws-t td{padding:10px;border-bottom:1px solid var(--bd);font-size:13.5px;vertical-align:middle}.ws-t tr.r{cursor:pointer}.ws-t tr.r:hover td{background:var(--p)}.ws-t tr.sel td{background:#6ea8fe0f}
+.ws-t td.nm{max-width:0;width:40%}.ws-t td.nm div{display:flex;align-items:center;gap:10px;overflow:hidden}.ws-t td.nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fic{display:inline-grid;place-items:center;width:30px;height:36px;border-radius:5px;font:700 9px 'JetBrains Mono',monospace;color:#0a0b0d;flex:none}
+.mu{color:var(--mu)}
+.wpill{display:inline-flex;gap:6px;align-items:center;font-size:11.5px;padding:2px 9px;border-radius:12px;border:1px solid;white-space:nowrap}.wpill.ok{color:var(--ok);border-color:#3ecf8e88}.wpill.wn{color:var(--wn);border-color:#f5b94288}.wpill.run{color:var(--ac);border-color:#6ea8fe88}.wpill.er{color:var(--er);border-color:#f2686b88}
+.wpill.run:before{content:"";width:9px;height:9px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp 1s linear infinite}
+.ws-panel{background:var(--p);border:1px solid var(--bd);border-radius:14px;padding:16px;position:sticky;top:0}
+.ws-thumb{background:#fff;border-radius:6px;height:220px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--bd)}.ws-thumb img{max-width:100%;max-height:100%;display:block}
+.ws-st{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ws-st div{background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:8px 10px}.ws-st b{font-size:19px;display:block}.ws-st span{font-size:11px;color:var(--mu)}
+.ws-acts{display:flex;flex-direction:column;gap:8px;margin-top:14px}.ws-acts .row2{display:flex;gap:8px}.ws-acts .btn{justify-content:center;display:flex}.ws-acts .row2 .btn{flex:1}.btn.danger{color:var(--er)}.btn.danger:hover{border-color:var(--er)}
+.ws-empty{border:1px solid var(--bd);border-radius:14px;padding:40px;text-align:center;color:var(--mu)}
+.ws-form{background:var(--p);border:1px solid var(--bd);border-radius:14px;padding:20px;max-width:640px;margin-bottom:16px}.ws-form h3{margin:0 0 4px;font-size:16px}.ws-form p{color:var(--mu);margin:0 0 14px;font-size:13.5px}
+.fld{display:block;margin-bottom:12px}.fld span{display:block;font-size:12.5px;color:var(--mu);margin-bottom:4px}.fld input{width:100%;background:var(--p2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:9px 11px;font:inherit}.fld input:focus{outline:none;border-color:var(--ac)}
+.okmsg{color:var(--ok);font-size:13px;margin-left:10px}.ermsg{color:var(--er);font-size:13px;margin:6px 0 10px}
+/* modal */
+.md-back{position:fixed;inset:0;background:#000a;backdrop-filter:blur(6px);display:none;place-items:center;z-index:80;padding:16px}.md-back.on{display:grid}
+.md-box{width:min(420px,100%);background:var(--p);border:1px solid var(--bd);border-radius:16px;padding:22px;box-shadow:0 30px 90px #000c;animation:up2 .25s}@keyframes up2{from{opacity:0;transform:translateY(10px)}}
+.md-box h3{margin:0 0 4px;font-size:20px;letter-spacing:-.4px}.md-box .sub{color:var(--mu);font-size:13.5px;margin:0 0 16px}
+.md-tabs{display:flex;gap:4px;background:var(--p2);border:1px solid var(--bd);border-radius:10px;padding:3px;margin-bottom:16px}.md-tabs button{flex:1;border:0;background:none;padding:7px;border-radius:7px;color:var(--mu)}.md-tabs button.on{background:var(--p);color:var(--tx);box-shadow:0 1px 0 #0004}
+.md-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+@media(max-width:1100px){.lp-grid3{grid-template-columns:repeat(2,minmax(0,1fr))}.lp-hero{grid-template-columns:minmax(0,1fr)}.lp-right{order:2}.lp-left,.lp-right{min-width:0}.ws-grid{grid-template-columns:1fr}.ws-panel{position:static}}
+@media(max-width:860px){.lp-links{display:none}.wsv.on{grid-template-columns:1fr;grid-template-rows:auto 1fr}.ws-side{flex-direction:row;flex-wrap:wrap;gap:8px;padding:10px 12px;align-items:center;border-right:0;border-bottom:1px solid var(--bd)}.ws-side .lp-logo{padding:0;font-size:16px}.ws-lab,.ws-recent,.ws-store,.ws-side>.lp-sp{display:none}.ws-nav{flex-direction:row;margin:0;flex-wrap:wrap}.ws-me{border:0;padding:0;margin-left:auto}.ws-me .who{display:none}.ws-upbtn{padding:8px 12px!important}.ws-head{padding:10px 12px}.ws-body{padding:16px 12px}.ws-t .hide-s{display:none}}
+@media(max-width:640px){.lp-grid3{grid-template-columns:1fr}.bn-slide{grid-template-columns:1fr;height:auto}.bn-doc{display:none}.lp-opts{grid-template-columns:1fr}.lp-nav .btn.go{display:none}.lp-uprow{flex-direction:column}}
+.chat-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}.mbadge{font-size:11px;border:1px solid var(--bd);border-radius:10px;padding:1px 8px;color:var(--mu);white-space:nowrap}.mbadge.ai{color:var(--ac);border-color:#6ea8fe66}
+.chat-intro p{color:var(--mu);font-size:13px;margin:4px 0 10px;line-height:1.55}.chat-log{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.cm{border-radius:12px;padding:9px 12px;line-height:1.55;font-size:13.5px}.cm.u{align-self:flex-end;max-width:88%;background:#6ea8fe1f;border:1px solid #6ea8fe44;border-radius:12px 12px 3px 12px;white-space:pre-wrap}
+.cm.a{background:var(--p2);border:1px solid var(--bd);border-radius:12px 12px 12px 3px}.md p{margin:6px 0}.md ul,.md ol{margin:6px 0 6px 18px;padding:0}.md li{margin:2px 0}.md .mh1,.md .mh2{font-weight:650;font-size:14.5px;margin:10px 0 4px}.md .mh3,.md .mh4{font-weight:600;margin:8px 0 2px}
+.md code{font:12px 'JetBrains Mono',monospace;background:var(--p);border:1px solid var(--bd);border-radius:4px;padding:0 4px}.md .am{overflow-x:auto;margin:6px 0}.md pre{white-space:pre;overflow:auto}
+.cite{color:var(--ac);cursor:pointer;font-size:11.5px;border:1px solid #6ea8fe55;border-radius:8px;padding:0 5px;margin:0 1px;white-space:nowrap;text-decoration:none}.cite:hover{background:#6ea8fe22}
+.srcs{margin-top:8px}.srcs summary{font-size:12px}.chat-in{position:sticky;bottom:-14px;background:var(--p);padding:8px 0 4px;margin:0}
+.typing{display:inline-flex;gap:3px;margin-right:8px;vertical-align:middle}.typing i{width:6px;height:6px;border-radius:50%;background:var(--mu);animation:tb 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}@keyframes tb{50%{opacity:.25;transform:translateY(-2px)}}
+</style></head><body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="pfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8fe"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs></svg>
+<section id="landing" class="view on">
+<div class="lp-top">
+<nav class="lp-nav">
+ <a class="lp-logo" href="#" onclick="lpTop(event)"><svg viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="7" fill="url(#pfg)"/><path d="M10 9h8a4 4 0 010 8h-8M10 9v14M20 20l3 3 4-5" stroke="#0a0b0d" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>ParseFlow</a>
+ <div class="lp-links"><a href="#features" onclick="lpGo(event,'features')">Features</a><a href="#how" onclick="lpGo(event,'how')">How it works</a><a href="#formats" onclick="lpGo(event,'formats')">Formats</a></div>
+ <span class="lp-sp"></span>
+ <button class="btn go" onclick="startDemo()">▶ Try Live Demo</button>
+ <span id="navAuth" class="lp-auth"></span>
+</nav>
+<div class="lp-hero">
+ <div class="lp-left">
+  <div class="lp-badge"><i></i>DataQuest 3.0 · DQCL ParseAnything · Team DEADLOCK</div>
+  <h1 class="lp-h1">Parse<span>Flow</span><br>reads any document.</h1>
+  <p class="lp-sub">Digital text, tables, scans, handwriting and equations → structured JSON + Markdown, with the evidence behind every block.</p>
+  <div class="lp-up">
+   <div class="lp-uprow"><button class="btn go lp-big" onclick="fi.click()">⬆ Upload document</button><button class="btn lp-big2" onclick="fi.click()">Browse files</button></div>
+   <div class="lp-opts" id="lpOpts"></div>
+   <div class="lp-fmts"><span>PDF</span><span>Word</span><span>PowerPoint</span><span>Excel</span><span>Images</span><span>Text</span><em id="lpLim">· up to 300 MB · 1000 pages</em></div>
+  </div>
+  <input id="fi" type="file" hidden accept=".pdf,.docx,.doc,.odt,.rtf,.pptx,.ppt,.odp,.xlsx,.xlsm,.xls,.ods,.csv,.tsv,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.gif,.webp,.heic,.txt,.md,.html,.htm,.epub,.xps,.json" onchange="onFile(this.files[0]);this.value=''">
+  <div id="uerr"></div>
+ </div>
+ <div class="lp-right">
+  <div class="lp-banner" id="banner" onmouseenter="bnPause(true)" onmouseleave="bnPause(false)">
+   <div class="bn-h"><span class="bn-live"><i></i>FEATURE TOUR</span><span class="bn-mu">·</span><span id="bnCount" class="bn-mu"></span><span class="lp-sp"></span><span class="mono bn-mu" id="bnFile"></span></div>
+   <div class="bn-slide" id="bnSlide"></div>
+   <div class="bn-f"><button class="bn-arrow" onclick="bnGo(BN-1)" aria-label="Previous">‹</button><div class="bn-dots" id="bnDots"></div><button class="bn-arrow" onclick="bnGo(BN+1)" aria-label="Next">›</button>
+    <span class="bn-labels" id="bnLabels"></span><span class="lp-sp"></span><button class="btn sm" onclick="startDemo()">Open full demo →</button></div>
+  </div>
+ </div>
+</div>
+<div class="lp-ticker"><div class="lp-track" id="lpTrack"></div></div>
+</div>
+
+<div class="lp-sec" id="features">
+ <div class="lp-eye">What ParseFlow does</div>
+ <h2 class="lp-h2">One upload. Every kind of content.</h2>
+ <p class="lp-lead">ParseFlow looks at each region of a page and sends it to the extractor that fits — then tells you how sure it is and where the result came from.</p>
+ <div class="lp-grid3">
+  <div class="lp-card"><div class="lp-ic"><svg viewBox="0 0 24 24"><path d="M4 6h7M4 10h7M4 14h7M13 6h7M13 10h7M13 14h7"/></svg></div><h4>Layout that reads like a person</h4><p>Multi-column articles, sidebars and drop caps in the right order; running headers and page numbers set aside.</p></div>
+  <div class="lp-card"><div class="lp-ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></div><h4>Tables with real structure</h4><p>Ruled, borderless and booktabs tables, merged cells, rotated headers — Markdown or HTML output.</p></div>
+  <div class="lp-card"><div class="lp-ic"><svg viewBox="0 0 24 24"><path d="M5 7h6l-4 5 4 5H5M14 9l5 6M19 9l-5 6"/></svg></div><h4>Equations as LaTeX</h4><p>Fractions, sums with limits, sub- and superscripts rebuilt from the PDF itself — and rendered as real maths.</p></div>
+  <div class="lp-card"><div class="lp-ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/><path d="M15 15l4 4"/></svg></div><h4>Scans &amp; handwriting</h4><p>Adaptive OCR for faded, skewed, noisy pages; handwriting and diagrams via an optional vision model.</p></div>
+  <div class="lp-card"><div class="lp-ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg></div><h4>Ask your document</h4><p>Questions answered with passages copied from the document, each with a View Source link — nothing generated.</p></div>
+  <div class="lp-card"><div class="lp-ic"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></div><h4>Flags instead of guesses</h4><p>Unreadable regions are preserved and marked for review — nothing is invented to look complete.</p></div>
+ </div>
+</div>
+
+<div class="lp-sec" id="how">
+ <div class="lp-eye">How it works</div>
+ <h2 class="lp-h2">Seven stages, all visible.</h2>
+ <p class="lp-lead">The same stages you see while a document is processing. Long reports are handled a slice of pages at a time, so a 400-page file works on an ordinary laptop.</p>
+ <div class="lp-pipe" id="lpPipe"></div>
+</div>
+
+<div class="lp-sec" id="formats">
+ <div class="lp-eye">Try it on your own file</div>
+ <h2 class="lp-h2">Drop a document</h2>
+ <div class="lp-drop" id="drop" onclick="fi.click()">
+  <div class="lp-dropic"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></div>
+  <h3>Drag &amp; drop your file here</h3>
+  <p>or <u>browse from your computer</u></p>
+  <div class="lp-fmt"><span>.pdf</span><span>.docx</span><span>.pptx</span><span>.xlsx</span><span>.csv</span><span>.png</span><span>.jpg</span><span>.tiff</span><span>.md</span><span class="lp-fmt2">ParseFlow .json</span></div>
+  <div class="lp-dropbtns" id="lpDropBtns" onclick="event.stopPropagation()"></div>
+  <div class="lp-note" id="lpNote"></div>
+ </div>
+</div>
+
+<footer class="lp-foot"><span class="lp-logo sm"><svg viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="7" fill="url(#pfg)"/><path d="M10 9h8a4 4 0 010 8h-8M10 9v14M20 20l3 3 4-5" stroke="#0a0b0d" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>ParseFlow</span><span>Team DEADLOCK · DataQuest 3.0</span><span class="lp-sp"></span><span id="beb" class="cap"><i></i>checking backend…</span><a href="https://github.com/ADII6769/PARSERFLOWS" target="_blank" rel="noopener">GitHub</a></footer>
+</section>
+
+<section id="ws" class="wsv">
+<aside class="ws-side">
+ <a class="lp-logo" href="#" onclick="event.preventDefault();wsNav('docs')"><svg viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="7" fill="url(#pfg)"/><path d="M10 9h8a4 4 0 010 8h-8M10 9v14M20 20l3 3 4-5" stroke="#0a0b0d" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>ParseFlow</a>
+ <button class="btn go ws-upbtn" onclick="fi.click()">＋ Upload new document</button>
+ <div class="ws-nav" id="wsNav"></div>
+ <div class="ws-lab">Recent</div>
+ <div class="ws-nav ws-recent" id="wsRecent"></div>
+ <div class="ws-lab">Account</div>
+ <div class="ws-nav" id="wsAcct"></div>
+ <span class="lp-sp"></span>
+ <div class="ws-store" id="wsStore"></div>
+ <div class="ws-me" id="wsMe"></div>
+</aside>
+<main class="ws-main">
+ <header class="ws-head"><label class="ws-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="wsQ" placeholder="Search your documents by name…" oninput="WSQ=this.value;renderWsBody()"></label><span class="lp-sp"></span><span id="beb3" class="cap"></span><button class="btn" onclick="startDemo()">▶ Try Live Demo</button></header>
+ <div id="wserr"></div>
+ <div class="ws-body" id="wsBody"></div>
+</main>
+</section>
+
+<div class="md-back" id="mdBack" onclick="if(event.target==this)mdClose()"><div class="md-box" id="mdBox" role="dialog" aria-modal="true"></div></div>
+
+<section id="procv" class="view"><div class="proc"><h2 style="margin:0 0 14px">Processing</h2><div class="pcard"><div id="pfile"></div><div class="up"><i id="upb"></i></div></div><div id="stages"></div></div></section>
+
+<section id="app" class="app"><div class="top"><div class="logo"><svg viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="7" fill="url(#pfg)"/><path d="M10 9h8a4 4 0 010 8h-8M10 9v14M20 20l3 3 4-5" stroke="#0a0b0d" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>ParseFlow</div><span class="fn" id="fname"></span><span class="demo" id="demob">DEMO · synthetic sample document</span><span style="flex:1"></span><span id="beb2" class="cap"></span><button class="btn sm" id="shareb" onclick="shareDlg()" style="display:none">Share</button> <button class="btn sm go" onclick="DOC.demo?tourGo(0):present()">▶ Present</button> <button class="btn sm" onclick="goHome()">New document</button></div>
+<div class="main"><div class="thumbs" id="thumbs"></div><div class="vw"><div class="bar"><span id="pginfo"></span><span style="flex:1"></span><label><input type="checkbox" id="ovt" checked onchange="renderPage()"> Region overlays</label></div><div class="page" id="page"></div></div>
+<div class="rt"><div class="tabs" id="tabs"></div><div class="pane" id="pane"></div></div></div></section>
+
+<div class="tour" id="tour"><div class="sn" id="tn"></div><h4 id="th"></h4><p id="tp"></p><div class="ctl"><div class="dots" id="td"></div><span style="color:var(--mu);font-size:11px"><kbd>←</kbd> <kbd>→</kbd> <kbd>Esc</kbd></span><button class="btn sm" onclick="tourGo(ti-1)">Back</button><button class="btn sm pri" onclick="tourGo(ti+1)" id="tnx">Next</button></div></div>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const EXT={vector_diagram:'Vector Diagram Reader',vision_table:'Vision Table Extractor',ocr:'OCR Engine (Tesseract)',digital_text_parser:'Digital Text Parser',table_engine:'Table Extractor',vision_chart:'Vision Chart',vision_handwriting:'Vision Handwriting',vision_diagram:'Vision Diagram',math_vision:'Math / Vision',math_model:'Math recognizer (local)',fallback:'Fallback + Flag'};
+const LANE={vector_diagram:'LOCAL',vision_table:'VISION',ocr:'OCR',digital_text_parser:'LOCAL',table_engine:'LOCAL',vision_chart:'VISION',vision_handwriting:'VISION',vision_diagram:'VISION',math_vision:'VISION',math_model:'LOCAL',fallback:'FLAG'};
+const verify=c=>c>=.85?'verified':c>=.6?'review':'failed';
+const B=(id,type,page,bbox,ro,conf,ct,ex,content,x={})=>({block_id:id,type,content,page,bbox,reading_order:ro,confidence:conf,confidence_type:ct,extractor:ex,verification:verify(conf),relationships:[],warnings:[],...x});
+let DOC,DEMO={document_id:'demo_001',filename:'demo_mixed_document.pdf',format:'pdf (synthetic demo)',demo:true,pages:[{n:1,kind:'digital'},{n:2,kind:'scanned + handwritten'}],processing_status:'complete',warnings:[],blocks:[
+B('txt_1_01','heading',1,[40,40,560,80],1,.99,'native','digital_text_parser','Quarterly Financial Review'),
+B('txt_1_02','paragraph',1,[40,95,560,175],2,.99,'native','digital_text_parser','Total revenue for FY24 was $48.2M, up 11% from FY23. Growth was led by the APAC region, while Europe was flat. Debt figures are summarised in the table below.'),
+B('tbl_1_01','table',1,[40,200,560,330],3,.94,'heuristic (estimated)','table_engine','Regional revenue, FY23 vs FY24',{rows:[['Region','FY23 ($M)','FY24 ($M)'],['Americas','18.0','19.1'],['Europe','11.2','11.2'],['APAC','14.4','17.9']]}),
+B('chart_1_01','chart',1,[40,360,560,620],4,.72,'model (estimated)','vision_chart','Bar chart "Revenue by Region". Three bars; APAC is visibly tallest, Europe shortest. Exact values not recoverable from bar heights.',{chart_type:'bar',title:'Revenue by Region',data:null,warnings:['Chart values not extracted — trend described only.']}),
+B('cap_1_01','caption',1,[40,630,560,655],5,.97,'native','digital_text_parser','Figure 1. Revenue by region, FY24.'),
+B('hand_2_01','handwritten_text',2,[40,40,560,90],1,.9,'model','vision_handwriting','AVL Tree — Deletion'),
+B('diag_2_01','diagram',2,[40,110,330,400],2,.81,'model','vision_diagram','Handwritten AVL tree diagram: root 30 with left child 20 and left-left child 10 (left-heavy). Arrow indicates a single right rotation about node 30.',{elements:['node 30','node 20','node 10','rotation arrow'],relationships:['30→left→20','20→left→10','rotate-right(30)'],answer:'Right rotation — LL case.'}),
+B('hand_2_02','handwritten_text',2,[350,120,570,200],3,.78,'model','vision_handwriting','LL Rotation: single right rotation'),
+B('code_2_01','handwritten_code',2,[350,230,570,330],4,.74,'model','vision_handwriting','struct Node *p = root->left;\nroot->left = p->right;\np->right = root;'),
+B('eq_2_01','equation',2,[40,430,400,490],5,.88,'model','math_vision','BF = h(L) - h(R)',{latex:'BF = h(L) - h(R)'}),
+B('hand_2_03','handwritten_text',2,[40,520,560,640],6,.41,'model','vision_handwriting',null,{warnings:['Low confidence — review source. Content withheld rather than guessed.']}),
+B('hand_2_04','handwritten_text',2,[40,670,560,740],7,.83,'model','vision_handwriting','|BF| > 1  =>  rebalance')]};
+DOC=DEMO;DOC.blocks.forEach(b=>{if(b.verification!=='verified'&&!b.warnings.length)b.warnings.push('Confidence below verification threshold (0.85) — review recommended.')});
+let sel=null,pg=1,tab='Inspector',flt='All',aq=[];
+function warnHTML(){const sample=DOC.local&&DOC.blocks.some(b=>b.extractor=='fallback')?`<div style="margin:8px 0"><button class="btn sm go" onclick="present()">▶ See a sample handwritten-page result (demo, not your file)</button></div>`:'';const w=[...(DOC.warnings||[])],f=DOC.blocks.filter(b=>b.verification!='verified');return `<h3 style="margin:18px 0 6px">Warnings</h3>`+(w.length||f.length?w.map(x=>`<div class="warn">${esc(x)}</div>`).join('')+(f.length?`<div class="warn">${f.length} block${f.length>1?'s':''} flagged for review — see Blocks → Warning.</div>`:''):'<div style="color:var(--ok)">✓ No warnings</div>')+sample}
+const TABS=['Inspector','Overview','Blocks','Tables','Visuals','JSON','Markdown','Ask'];
+const COL={verified:'#3ecf8e',review:'#f5b942',failed:'#f2686b'};
+const ink='#1d2433',pen='#1e3a8a';
+function realPage(n){const p=DOC.pages[n-1],W=p.width||600,H=p.height||800;return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`+(LI[n]?`<image href="${LI[n]}" width="${W}" height="${H}"/>`:BE?`<image href="/api/page/${DOC.document_id}/${n}.png" width="${W}" height="${H}"/>`:`<rect width="${W}" height="${H}" fill="#f3f4f6"/><text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="${W/28}" fill="#6b7280">Source image unavailable (backend offline)</text>`)+'</svg>'}
+function pageSVG(n){return DOC.real?realPage(n):demoSVG(n)}
+function demoSVG(n){let s='<svg viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg">';
+if(n==1){s+=`<g font-family="Georgia,serif" fill="#111"><text x="40" y="72" font-size="28" font-weight="bold">Quarterly Financial Review</text><g font-size="13">`+['Total revenue for FY24 was $48.2M, up 11% from FY23. Growth','was led by the APAC region, while Europe was flat. Debt','figures are summarised in the table below.'].map((t,i)=>`<text x="40" y="${118+i*22}">${t}</text>`).join('')+`</g>`;
+[['Region','FY23 ($M)','FY24 ($M)'],['Americas','18.0','19.1'],['Europe','11.2','11.2'],['APAC','14.4','17.9']].forEach((r,i)=>{s+=`<rect x="40" y="${200+i*32}" width="520" height="32" fill="${i?'#fff':'#eef1f5'}" stroke="#bbb"/>`+r.map((c,j)=>`<text x="${52+j*175}" y="${221+i*32}" font-size="13" ${i?'':'font-weight="bold"'}>${c}</text>`).join('')});
+s+=`<line x1="80" y1="590" x2="540" y2="590" stroke="#444"/><line x1="80" y1="380" x2="80" y2="590" stroke="#444"/>`+[['Americas',100,19.1,'#5b7fbf'],['Europe',260,11.2,'#5b7fbf'],['APAC',420,17.9*1.18,'#3b5ea0']].map(([l,x,v,c])=>`<rect x="${x}" y="${590-v*10}" width="90" height="${v*10}" fill="${c}"/><text x="${x+45}" y="610" font-size="12" text-anchor="middle">${l}</text>`).join('')+`<text x="40" y="648" font-size="12" font-style="italic">Figure 1. Revenue by region, FY24.</text></g>`}
+else{s+=`<rect width="600" height="800" fill="#f4f1e6"/><g fill="none" stroke="#d9d4c0">`+Array.from({length:19},(_,i)=>`<line x1="0" y1="${40+i*40}" x2="600" y2="${40+i*40}"/>`).join('')+`</g><g font-family="Caveat,'Comic Sans MS',cursive" fill="${pen}" font-size="30"><text x="44" y="78" font-size="38">AVL Tree — Deletion</text><text x="355" y="160">LL Rotation:</text><text x="355" y="192" font-size="26">single right rot.</text><g font-size="22"><text x="355" y="262">struct Node *p = root->left;</text><text x="355" y="292">root->left = p->right;</text><text x="355" y="322">p->right = root;</text></g><text x="44" y="470" font-size="34">BF = h(L) - h(R)</text><text x="44" y="710" font-size="30">|BF| &gt; 1 &#8658; rebalance</text></g>
+<g stroke="${pen}" stroke-width="2.5" fill="none"><circle cx="200" cy="150" r="24"/><circle cx="130" cy="240" r="24"/><circle cx="85" cy="330" r="24"/><line x1="185" y1="171" x2="145" y2="219"/><line x1="115" y1="261" x2="98" y2="308"/><path d="M250 200 q40 40 5 90" /><path d="M255 290 l-3 -14 m3 14 l13 -6"/></g><g font-family="Caveat,cursive" fill="${pen}" font-size="24" text-anchor="middle"><text x="200" y="158">30</text><text x="130" y="248">20</text><text x="85" y="338">10</text></g>
+<path d="M60 560 q25 -30 40 5 t45 -10 t50 20 q30 -35 60 0 t80 -15 q40 20 70 -5 M70 600 q50 -20 90 8 t120 -12 t150 10" stroke="${pen}" stroke-width="2" fill="none" opacity=".55"/>`}
+return s+'</svg>'}
+let THD=null;const thImg=p=>BE&&DOC.real&&!DOC.local&&!LI[p.n]?`<img class="thi" loading="lazy" decoding="async" alt="" src="/api/thumb/${DOC.document_id}/${p.n}.jpg" style="aspect-ratio:${p.width||600}/${p.height||800}">`:pageSVG(p.n);
+function renderThumbs(){const t=$('thumbs');if(THD!==DOC||t.children.length!=DOC.pages.length){THD=DOC;t.innerHTML=DOC.pages.map(p=>`<div class="th ${p.n==pg?'on':''}" id="th_${p.n}" onclick="goto(${p.n})">${thImg(p)}Page ${p.n}<br>${esc(p.kind)}</div>`).join('');return}
+const o=t.querySelector('.th.on');if(o&&o.id!='th_'+pg)o.classList.remove('on');const c=$('th_'+pg);if(c&&!c.classList.contains('on')){c.classList.add('on');const r=c.getBoundingClientRect(),R=t.getBoundingClientRect();if(r.top<R.top||r.bottom>R.bottom)c.scrollIntoView({block:'nearest'})}}
+function renderPage(){const bl=DOC.blocks.filter(b=>b.page==pg),pp=DOC.pages[pg-1],W=pp.width||600;let svg=pageSVG(pg).replace('</svg>','');
+if($('ovt').checked){svg+=bl.map(b=>`<rect class="bb ${sel==b.block_id?'sel':''}" id="bb_${b.block_id}" x="${b.bbox[0]}" y="${b.bbox[1]}" width="${b.bbox[2]-b.bbox[0]}" height="${b.bbox[3]-b.bbox[1]}" stroke="${COL[b.verification]}" stroke-width="${W/300}" ${b.furniture&&b.furniture.excluded?`stroke-dasharray="${W/120} ${W/160}" opacity=".6"`:''} onclick="pick('${b.block_id}')"><title>${b.type} · ${b.block_id}</title></rect>`).join('');
+const sb=bl.find(b=>b.block_id==sel);if(sb){const fs=W/48,t=sb.type+' · '+(sb.confidence*100|0)+'%';svg+=`<g class="lab"><rect x="${sb.bbox[0]}" y="${Math.max(0,sb.bbox[1]-fs*1.7)}" width="${t.length*fs*.62+fs}" height="${fs*1.6}" fill="${COL[sb.verification]}" rx="3"/><text x="${sb.bbox[0]+fs*.5}" y="${Math.max(0,sb.bbox[1]-fs*1.7)+fs*1.15}" font-size="${fs}" fill="#0a0b0d">${t}</text></g>`}}
+$('page').innerHTML=svg+'</svg>';const fl=pp.flags||{};$('pginfo').innerHTML=`Page ${pg} of ${DOC.pages.length} · ${bl.length} regions · <span class="fl" style="display:inline-flex;vertical-align:middle"><span>${esc(pp.kind)}</span>${fl.text_layer===true?'<span>text layer</span>':fl.text_layer===false?'<span>no text layer</span>':''}${fl.multi_column?'<span>multi-column</span>':''}${fl.tables?`<span>${fl.tables} table</span>`:''}${fl.figures?`<span>${fl.figures} figure</span>`:''}${fl.visual_regions?`<span>${fl.visual_regions} visual/handwriting</span>`:''}</span>`;renderThumbs()}
+function goto(n){pg=n;renderPage()}
+function pick(id){sel=id;const b=DOC.blocks.find(x=>x.block_id==id);pg=b.page;tab='Inspector';renderPage();renderTabs()}
+function source(id){const b=DOC.blocks.find(x=>x.block_id==id);sel=id;pg=b.page;$('ovt').checked=true;renderPage();renderTabs();const r=$('bb_'+id);r.classList.add('pulse');r.scrollIntoView({block:'center',behavior:'smooth'})}
+let LIM={};const more=(k,n,step)=>n>(LIM[k]||step)?`<div style="text-align:center;margin:10px 0"><button class="btn sm" onclick="LIM['${k}']=(LIM['${k}']||${step})+${step};renderTabs()">Show ${Math.min(step,n-(LIM[k]||step))} more (${n-(LIM[k]||step)} remaining)</button></div>`:'';const cap=(k,a,step)=>a.slice(0,LIM[k]||step);
+const pill=v=>`<span class="pill ${v}">${{verified:'✓ Verified',review:'⚠ Review',failed:'✕ Flagged'}[v]}</span>`;
+const isVis=b=>['unknown','chart','figure','diagram','equation','handwritten_text','handwritten_code'].includes(b.type);
+const isHW=b=>b.type.startsWith('handwritten')||b.extractor=='vision_handwriting',isViz=b=>isVis(b)&&!isHW(b);
+const bar=b=>`<div class="bar2"><i style="width:${b.confidence*100}%;background:${COL[b.verification]}"></i></div>`;
+function row(b){return `<div class="row" onclick="pick('${b.block_id}')"><div class="h"><span class="mono">${b.type}</span>${pill(b.verification)}<span style="margin-left:auto">p${b.page} · ${(b.confidence*100|0)}%</span></div><p>${esc(b.content??'⚠ Low confidence — review source')}</p></div>`}
+function tblHTML(r){return `<table class="t">${r.map((x,i)=>`<tr>${x.map(c=>i?`<td>${esc(c)}</td>`:`<th>${esc(c)}</th>`).join('')}</tr>`).join('')}</table>`}
+function md(){let o=`<!-- ParseFlow · ${DOC.filename} -->\n`;DOC.blocks.slice().sort((a,b)=>a.page-b.page||a.reading_order-b.reading_order).forEach(b=>{const prov=`<!-- ${b.block_id} · p${b.page} · bbox ${JSON.stringify(b.bbox)} · ${b.extractor} · ${b.confidence} (${b.confidence_type}) · ${b.verification} -->`;let t;
+if(b.content==null)t=`> ⚠ ${b.type=='figure'||b.type=='unknown'?'Visual region not interpreted':'Unreadable region'} — flagged for review (confidence ${b.confidence}).`;
+else if(b.type=='heading'||(b.type=='handwritten_text'&&b.reading_order==1))t='# '+b.content;
+else if(b.type=='table')t=`**${b.content}**\n\n`+b.rows.map((r,i)=>'| '+r.join(' | ')+' |'+(i?'':'\n|'+r.map(()=>'---').join('|')+'|')).join('\n');
+else if(b.type=='handwritten_code')t='### Handwritten Code\n```text\n'+b.content+'\n```';
+else if(b.type=='diagram')t='### Diagram\n'+b.content+'\n\nRelationships: '+b.relationships.join(', ');
+else if(b.type=='chart')t='### Chart\n'+b.content;
+else if(b.type=='equation')t='### Equation\n$$'+b.latex+'$$';
+else if(b.type=='handwritten_text')t='### Handwritten Notes\n'+b.content;else t=b.content;o+=`\n${prov}\n${t}\n`});return o}
+let MDF=false,MDX=null;
+/* very large documents open from a light copy (no provenance details, no Markdown); the rest is fetched when needed */
+function fetchDoc(id){return fetch('/api/document/'+id+'?lite=auto',{credentials:'same-origin'}).then(r=>{if(!r.ok)throw 0;return r.json()})}
+let FULLREQ={},MDREQ=false;
+function fullPage(n){if(!DOC||!DOC.lite||FULLREQ[n])return;FULLREQ[n]=1;const id=DOC.document_id;
+ fetch('/api/document/'+id+'/blocks?page='+n,{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!DOC||DOC.document_id!==id)return;
+  const by={};j.blocks.forEach(b=>by[b.block_id]=b);DOC.blocks.forEach(b=>{if(b.page==n&&by[b.block_id])Object.assign(b,by[b.block_id],{_full:true})});if(tab=='Inspector')renderTabs()}).catch(()=>{FULLREQ[n]=0})}
+function mdLoad(){if(MDREQ||!DOC||!DOC.lite)return;MDREQ=true;const id=DOC.document_id;
+ fetch('/api/document/'+id+'/markdown',{credentials:'same-origin'}).then(r=>r.ok?r.text():null).then(t=>{if(t!=null&&DOC&&DOC.document_id===id){DOC.markdown=t;if(tab=='Markdown')renderTabs()}}).catch(()=>{MDREQ=false})}
+function mdText(){return MDF&&MDX!=null?MDX:(DOC.markdown!=null?DOC.markdown:(DOC.lite?(mdLoad(),'Loading the Markdown…'):md()))}
+function toggleFurniture(c){MDF=c;if(c&&MDX==null&&BE&&DOC.real&&!DOC.local&&!DOC.demo){fetch('/api/document/'+DOC.document_id+'/markdown?include_furniture=1').then(r=>r.text()).then(t=>{MDX=t;renderTabs()}).catch(()=>renderTabs())}else renderTabs()}
+const tblBlock=b=>b.markdown&&/^<table/.test(b.markdown)?b.markdown.replace('<table>','<table class="t">'):b.rows?tblHTML(b.rows):'';
+function jsonHTML(){const hl=s=>esc(s).replace(/("(?:[^"\\]|\\.)*")(\s*:)?|\b(-?\d+\.?\d*)\b/g,(m,a,c,n)=>a?(c?`<span class="js-k">${a}</span>${c}`:`<span class="js-s">${a}</span>`):`<span class="js-n">${n}</span>`);
+const {blocks,...meta}=DOC;if(meta.markdown&&meta.markdown.length>20000)meta.markdown=`… ${(meta.markdown.length/1024|0)} KB of Markdown (full text in the Markdown tab and in Copy/Download) …`;if(Array.isArray(meta.router)&&meta.router.length>200)meta.router=[...meta.router.slice(0,20),`… ${meta.router.length-20} more router entries (one per block; full list in Copy/Download) …`];
+window.jsonOpen=(d,i)=>{if(d.open&&!d.dataset.f){d.dataset.f=1;d.insertAdjacentHTML('beforeend',`<pre>${hl(JSON.stringify(DOC.blocks[i],null,2))}</pre>`)}};return `<pre>${hl(JSON.stringify(meta,null,2))}</pre><div class="k">blocks (${blocks.length})</div>`+cap('json',blocks,300).map((b,i)=>`<details ontoggle="jsonOpen(this,${i})"><summary class="mono">${b.block_id} · ${b.type}</summary></details>`).join('')+more('json',blocks.length,300)}
+function ask(q){const stop=new Set('what does the is are was were which this that page say shown show in of a an about on and how'.split(' '));const m=q.match(/page\s*(\d+)/i);const syn={handwritten:'handwritten',note:'handwritten',notes:'handwritten',write:'handwritten',written:'handwritten',code:'code',rotation:'rotation rot',diagram:'diagram',chart:'chart',table:'table',equation:'equation',revenue:'revenue',debt:'debt',balance:'bf',factor:'bf'};
+const tk=q.toLowerCase().match(/[a-z0-9$]+/g).filter(w=>w.length>2&&!stop.has(w)).flatMap(w=>(syn[w]||w).split(' '));
+const sc=DOC.blocks.filter(b=>b.content!=null).map(b=>{const h=(b.content+' '+b.type+' '+(b.title||'')+' '+(b.rows||[]).flat().join(' ')+' '+(b.relationships||[]).join(' ')+' '+(b.elements||[]).join(' ')+' '+(b.ocr_text||'')).toLowerCase();let s=tk.filter(w=>h.includes(w)).length;if(m&&b.page==+m[1])s+=.5;return{b,s}}).filter(x=>x.s>=1||(m&&x.b.page==+m[1])).sort((a,b)=>b.s-a.s);
+if(m&&!DOC.pages[+m[1]-1])return null;if(!sc.length)return null;
+const top=sc.slice(0,/page/i.test(q)&&m?4:1).map(x=>x.b);const b0=top[0];
+let ans=b0.answer||(top.length>1?'Page '+m[1]+' contains: '+top.map(b=>b.content.split('\n')[0]).join('; ')+'.':b0.type=='table'?b0.rows.map(r=>r.join(' | ')).join('; '):b0.content);
+return{ans,top,conf:Math.min(...top.map(b=>b.confidence))}}
+function answerQ(q){q=String(q||'').trim();if(!q)return;if(SRV()){if(q){askSend(q);const i=$('qi');i&&setTimeout(()=>{const j=$('qi');j&&j.focus()},50);return}const it={q,wait:true};aq.unshift(it);if(aq.length>5)aq.pop();renderTabs();
+fetch('/api/ask/'+DOC.document_id+'?q='+encodeURIComponent(q)).then(r=>r.json()).then(j=>{it.wait=false;if(j.error)it.err=j.error.message;else it.s=j;if(tab=='Ask')renderTabs()}).catch(()=>{it.wait=false;it.err='The ParseFlow server did not respond.';if(tab=='Ask')renderTabs()});return}
+const r=ask(q);aq.unshift({q,r});if(aq.length>5)aq.pop();renderTabs();const i=$('qi');i&&i.focus()}
+const SRV=()=>!!(BE&&DOC&&DOC.real&&!DOC.local&&!DOC.demo);let KX=null;
+function loadKatex(){return KX||(KX=new Promise(ok=>{const l=document.createElement('link');l.rel='stylesheet';l.href='vendor/katex/katex.min.css';document.head.appendChild(l);const s=document.createElement('script');s.src='vendor/katex/katex.min.js';s.onload=()=>{const a=document.createElement('script');a.src='vendor/katex/auto-render.min.js';a.onload=()=>ok(true);a.onerror=()=>ok(false);document.head.appendChild(a)};s.onerror=()=>ok(false);document.head.appendChild(s)}))}
+function mathIn(el){if(!el||!/\\\(|\\\[/.test(el.textContent))return;loadKatex().then(ok=>{if(ok&&window.renderMathInElement)renderMathInElement(el,{delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false,ignoredTags:['script','noscript','style','textarea','pre','code','option','summary']})})}
+const mdl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+function partHTML(p){if(p.kind=='heading')return `<div class="ah">${esc(p.text)}</div>`;if(p.kind=='math')return `<div class="am">\\[${esc(p.latex)}\\]</div>`;
+if(p.kind=='code')return `<pre class="acode">${esc(p.text)}</pre>`+(p.full?`<details><summary>Show the whole block</summary><pre>${esc(p.full)}</pre></details>`:'');
+if(p.kind=='list'){const L=p.ordered?'ol':'ul';return `<${L} class="al">${p.items.map(i=>`<li>${esc(i)}</li>`).join('')}</${L}>`}
+if(p.kind=='table')return `<div class="atw">${p.html&&!p.highlight?p.html.replace('<table>','<table class="t">'):`<table class="t">${p.rows.map((r,i)=>`<tr>${r.map((c,j)=>i<p.header_rows?`<th>${esc(c)}</th>`:`<td${p.highlight&&p.highlight[0]==i&&p.highlight[1]==j?' class="hit"':''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`}</div>`+(p.note?`<div class="an">${esc(p.note)}</div>`:'');
+return `<div class="at">${p.markdown?mdl(p.text):esc(p.text)}</div>`+(p.full?`<details><summary>Show the whole passage</summary><div class="at">${esc(p.full)}</div></details>`:'')}
+const evHTML=e=>`<div class="evr"><div class="flow"><span class="mono">p${e.page} · ${esc(e.block_id)}</span><button class="btn sm" onclick="source('${e.block_id}')">View Source</button></div>${e.snippet?`<div class="evs">${esc(e.snippet)}</div>`:''}</div>`;
+
+/* ---------------- Ask about one block ---------------- */
+let BCHAT={},BLOADED={};
+function bChips(b){const t=b.type,st=b.structure_text||'';const c=[];
+ if(t=='diagram'||t=='figure'||t=='chart'||t=='unknown'){c.push(t=='chart'?'What does this chart show?':'Explain this diagram');
+  if(/automaton/.test(st))c.push('Which strings does it accept?');else if(/flowchart/.test(st))c.push('Trace the flowchart step by step');else if(/ tree /.test(st))c.push('Walk me through the traversal orders');else if(/ graph /.test(st))c.push('Is there a cycle? Find a shortest path');else if(/Time boundaries|boundaries/i.test(st))c.push('Compute waiting and turnaround times');else if(/ → \[|NIL/.test(st))c.push('Trace inserting a new node');else if(/cells/.test(st))c.push(/top/.test(st)?'What would the next push and pop do?':/head|tail/.test(st)?'What would the next enqueue and dequeue do?':'Trace the changes between rows');}
+ else if(t=='equation')c.push('Explain each symbol','Derive this step by step');
+ else if(t=='table')c.push('What does this table show?','What patterns do the values show?');
+ else if(t=='code'||t=='handwritten_code')c.push('Trace this code on a small input');
+ else c.push('Explain this simply','Give me an example');
+ c.push('Give me 3 practice questions on this');return c}
+function bAskHTML(b){const id=b.block_id,m=BCHAT[id]||[];bLoad(id);
+ const msgs=m.map(x=>x.role=='user'?`<div class="cm u">${esc(x.text)}</div>`:bBot(x)).join('');
+ return `<div class="bask" id="bask"><div class="flow" style="margin:12px 0 6px"><b style="font-size:13.5px">Ask about this block</b><span class="an" style="margin:0 0 0 6px">p${b.page} · ${esc(b.type)}</span><span style="flex:1"></span><button class="btn sm" title="Scroll the page view to this block" onclick="source('${id}')">Show on page</button>${m.length?`<button class="btn sm" onclick="bNew('${id}')">New</button>`:''}</div>
+ ${m.length?'':`<div class="chips" style="margin-bottom:6px">${bChips(b).map(q=>`<button onclick="bSend('${id}',this.textContent)">${esc(q)}</button>`).join('')}</div>`}
+ <div class="chat-log">${msgs}</div>
+ <div class="ask chat-in" style="position:static"><input id="bqi" placeholder="${m.length?'Ask a follow-up about this block…':'Ask about this '+esc(b.type)+'…'}" onkeydown="if(event.key=='Enter'&&this.value.trim())bSend('${id}',this.value)"><button class="btn pri" onclick="bqi.value.trim()&&bSend('${id}',bqi.value)">Ask</button></div>
+ <div class="an" style="margin-top:4px">Extraction confidence above is about how the block was read, not about the answer.</div></div>`}
+function bBot(x){if(x.wait)return `<div class="cm a"><div class="typing"><i></i><i></i><i></i></div><span class="an" style="margin:0">Looking at the block and its context…</span></div>`;
+ if(x.err)return `<div class="cm a"><p style="margin:0">${esc(x.err)}</p></div>`;const s=x.s;
+ const badges=(s.mode=='llm'?`<span class="mbadge ai">AI · ${esc((s.llm&&s.llm.model)||'model')}</span>`:`<span class="mbadge">Read from the document</span>`)+(s.used_image?'<span class="mbadge">image of the region sent</span>':'')+(s.structure?'<span class="mbadge">structure from the drawing</span>':'');
+ const comp=s.computed&&s.computed.length&&s.mode=='llm'?`<details class="srcs"><summary>Computed by ParseFlow (exact)</summary><ul>${s.computed.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></details>`:'';
+ return `<div class="cm a"><div class="flow" style="margin-bottom:4px">${badges}</div><div class="md">${mdHTML(s.answer||'')}</div>${comp}${srcList(s.citations,false)}${s.note?`<div class="an">${esc(s.note)}</div>`:''}</div>`}
+function bLoad(id){if(!SRV()||BLOADED[id])return;BLOADED[id]=1;const did=DOC.document_id;
+ fetch('/api/chat/'+did+'?block='+encodeURIComponent(id),{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!DOC||DOC.document_id!==did||(BCHAT[id]||[]).length)return;
+  BCHAT[id]=(j.messages||[]).map(m=>m.role=='user'?{role:'user',text:m.text}:{role:'assistant',s:m.s}).filter(m=>m.text||m.s);if(tab=='Inspector'&&sel==id&&BCHAT[id].length)renderTabs()}).catch(()=>{})}
+function bNew(id){BCHAT[id]=[];renderTabs();if(SRV())fetch('/api/chat/'+DOC.document_id+'?block='+encodeURIComponent(id),{method:'DELETE',credentials:'same-origin'}).catch(()=>{})}
+function bSend(id,q){q=String(q||'').trim();if(!q)return;const m=BCHAT[id]=BCHAT[id]||[];
+ const hist=[];m.forEach(x=>{if(x.role=='user')hist.push({role:'user',content:x.text});else if(x.s)hist.push({role:'assistant',content:x.s.answer||''})});
+ m.push({role:'user',text:q});const it={role:'assistant',wait:true};m.push(it);renderTabs();bScroll();
+ fetch('/api/ask/'+DOC.document_id+'/block/'+encodeURIComponent(id),{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,history:hist.slice(-12)})})
+ .then(r=>r.json()).then(j=>{it.wait=false;if(j.error)it.err=j.error.message;else it.s=j;if(tab=='Inspector'&&sel==id){renderTabs();bScroll()}})
+ .catch(()=>{it.wait=false;it.err='The ParseFlow server did not respond.';if(tab=='Inspector'&&sel==id)renderTabs()})}
+function bScroll(){setTimeout(()=>{const a=$('bask');if(a){const l=a.querySelector('.chat-log');const last=l&&l.lastElementChild;(last||a).scrollIntoView({block:'nearest'})}},40)}
+
+/* ---------------- Ask assistant (chat) ---------------- */
+let CHAT=[];
+function mdHTML(src){
+ const keep=[];const hold=x=>{keep.push(x);return `\u0000${keep.length-1}\u0000`};
+ let t=String(src||'').replace(/\r/g,'');
+ t=t.replace(/```[^\n]*\n([\s\S]*?)```/g,(m,c)=>hold(`<pre class="acode">${esc(c.replace(/\n$/,''))}</pre>`));
+ t=t.replace(/\\\[([\s\S]+?)\\\]/g,m=>hold(`<div class="am">${esc(m)}</div>`)).replace(/\$\$([\s\S]+?)\$\$/g,(m,x)=>hold(`<div class="am">\\[${esc(x)}\\]</div>`));
+ t=t.replace(/\\\(([\s\S]+?)\\\)/g,m=>hold(esc(m))).replace(/`([^`\n]+)`/g,(m,c)=>hold(`<code>${esc(c)}</code>`));
+ const inline=x=>esc(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?!\w)/g,'$1<i>$2</i>')
+  .replace(/[\[(]((?:pp?\.|pages?)\s*(\d{1,5})(?:\s*[–-]\s*\d{1,5})?(?:\s*,\s*\d{1,5})*)[\])]/g,(m,lab,n)=>`<a class="cite" onclick="citeGo(${+n})">${lab}</a>`)
+  .replace(/\u0000(\d+)\u0000/g,(m,k)=>keep[+k]);
+ const out=[];let list=null,para=[];
+ const flushP=()=>{if(para.length){out.push(`<p>${inline(para.join(' '))}</p>`);para=[]}};
+ const flushL=()=>{if(list){out.push(`<${list.t}>${list.items.map(i=>`<li>${inline(i)}</li>`).join('')}</${list.t}>`);list=null}};
+ for(const raw of t.split('\n')){const ln=raw.trimEnd();let m;
+  if(!ln.trim()){flushP();flushL();continue}
+  if(/^\u0000\d+\u0000$/.test(ln.trim())){flushP();flushL();out.push(ln.trim().replace(/\u0000(\d+)\u0000/,(x,k)=>keep[+k]));continue}
+  if(m=ln.match(/^(#{1,4})\s+(.*)$/)){flushP();flushL();out.push(`<div class="mh${m[1].length}">${inline(m[2])}</div>`);continue}
+  if(m=ln.match(/^\s*(?:[-*•]|(\d+)[.)])\s+(.*)$/)){flushP();const tt=m[1]?'ol':'ul';if(!list||list.t!=tt){flushL();list={t:tt,items:[]}}list.items.push(m[2]);continue}
+  if(list&&/^\s{2,}\S/.test(raw)){list.items[list.items.length-1]+=' '+ln.trim();continue}
+  flushL();para.push(ln.trim())}
+ flushP();flushL();return out.join('')}
+function citeGo(n){if(!DOC||!DOC.pages[n-1])return;pg=n;renderPage();const c=$('th_'+n);c&&c.scrollIntoView({block:'nearest'})}
+const pagesStr=ps=>{ps=(ps||[]).filter(Boolean);return !ps.length?'':ps.length==1?`p. ${ps[0]}`:`pp. ${ps[0]}–${ps[ps.length-1]}`};
+function ansText(s){if(!s)return '';if(s.answer)return s.answer;const e=s.extract;if(e&&e.parts)return e.parts.map(p=>p.text||p.latex||(p.items||[]).join('; ')||(p.rows||[]).map(r=>r.join(' | ')).join('\n')||'').join('\n').slice(0,2500);return ''}
+function askSend(q){q=String(q||'').trim();if(!q)return;
+ const hist=[];CHAT.forEach(m=>{if(m.role=='user')hist.push({role:'user',content:m.text});else if(m.s)hist.push({role:'assistant',content:ansText(m.s),chunk_ids:m.s.chunk_ids||[]})});
+ CHAT.push({role:'user',text:q});const it={role:'assistant',wait:true};CHAT.push(it);renderTabs();chatScroll();
+ fetch('/api/ask/'+DOC.document_id,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,history:hist.slice(-12)})})
+ .then(r=>r.json()).then(j=>{it.wait=false;if(j.error)it.err=j.error.message;else it.s=j;if(tab=='Ask'){renderTabs();chatScroll()}})
+ .catch(()=>{it.wait=false;it.err='The ParseFlow server did not respond.';if(tab=='Ask')renderTabs()})}
+function chatScroll(){setTimeout(()=>{const p=$('pane');if(p)p.scrollTop=p.scrollHeight},30)}
+function srcList(cs,open){if(!cs||!cs.length)return '';const row=c=>`<div class="evr"><div class="flow"><span class="mono">${pagesStr(c.pages)}</span>${c.section?`<span class="an" style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${esc(c.section)}</span>`:''}<span style="flex:1"></span><button class="btn sm" onclick="source('${c.block_id}')">View Source</button></div><div class="evs">${esc(c.snippet)}</div></div>`;
+ return `<details class="srcs" ${open?'open':''}><summary>Sources · ${cs.length} passage${cs.length>1?'s':''}</summary>${cs.map(row).join('')}</details>`}
+function botHTML(m){if(m.wait)return `<div class="cm a"><div class="typing"><i></i><i></i><i></i></div><span class="an" style="margin:0">Reading the relevant pages…</span></div>`;
+ if(m.err)return `<div class="cm a"><p style="margin:0">${esc(m.err)}</p></div>`;const s=m.s;
+ const badge=s.mode=='llm'?`<span class="mbadge ai">AI · ${esc((s.llm&&s.llm.model)||'model')}</span>`:`<span class="mbadge">Quoted from the document</span>`;
+ let body='';
+ if(s.mode=='llm'||s.answer)body=`<div class="md">${mdHTML(s.answer||'')}</div>`;
+ else if(s.extract&&s.extract.found)body=`<div class="ans">${s.extract.parts.map(partHTML).join('')}</div>`;
+ else body=`<p style="margin:4px 0">I couldn't find this in the document.</p>`;
+ const more=s.more&&s.more.length?`<div class="k">Also in the document</div>${s.more.map(c=>`<div class="evr"><div class="flow"><span class="mono">${pagesStr(c.pages)}</span><span style="flex:1"></span><button class="btn sm" onclick="source('${c.block_id}')">View Source</button></div><div class="evs">${esc(c.snippet)}</div></div>`).join('')}`:'';
+ const ev=s.mode=='extractive'&&s.extract&&s.extract.found?`<div class="k">Evidence</div>${s.extract.evidence.map(evHTML).join('')}`:srcList(s.citations,false);
+ return `<div class="cm a"><div class="flow" style="margin-bottom:4px">${badge}${s.intent=='summary'?'<span class="mbadge">Summary</span>':''}</div>${body}${more}${ev}${s.note?`<div class="an">${esc(s.note)}</div>`:''}</div>`}
+function chatChips(){const c=['Summarize this document',`Explain page ${pg} in simple words`];askChips().slice(1,4).forEach(x=>{if(!c.includes(x))c.push(x)});return c}
+let CHATDOC=null;
+function chatLoad(){if(!SRV()||!DOC||CHATDOC===DOC.document_id)return;CHATDOC=DOC.document_id;const id=DOC.document_id;
+ fetch('/api/chat/'+id,{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!DOC||DOC.document_id!==id||CHAT.length)return;
+  CHAT=(j.messages||[]).map(m=>m.role=='user'?{role:'user',text:m.text}:{role:'assistant',s:m.s}).filter(m=>m.text||m.s);if(tab=='Ask'){renderTabs();chatScroll()}}).catch(()=>{})}
+function chatNew(){CHAT=[];renderTabs();if(SRV()&&DOC)fetch('/api/chat/'+DOC.document_id,{method:'DELETE',credentials:'same-origin'}).catch(()=>{})}
+function toast(msg,bad){let t=$('pftoast');if(!t){t=document.createElement('div');t.id='pftoast';t.setAttribute('role','status');
+ t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(560px,calc(100vw - 32px));padding:10px 14px;border-radius:10px;font-size:13.5px;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,.25);background:var(--p2);color:var(--tx);border:1px solid var(--bd)';document.body.appendChild(t)}
+ t.textContent=msg;t.style.borderColor=bad?'var(--er)':'var(--bd)';t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none'},7000)}
+function aiTest(){const b=$('aitest');if(b){b.disabled=true;b.textContent='Testing…'}
+ fetch('/api/llm/test',{method:'POST',credentials:'same-origin'}).then(r=>r.json()).then(j=>{const e=j.error&&j.error.message||j.error;
+  const msg=j.ok?`AI connection works: ${j.provider} · ${j.model} answered in ${j.seconds}s`+(j.vision?(j.vision_ok?' · reads images':' · image test failed'+(j.vision_error?' ('+j.vision_error+')':'')):''):`AI connection failed: ${e||'no answer'}`;
+  const x=$('aitest');if(x){x.disabled=false;x.textContent=j.ok?'AI ✓':'AI ✗';x.title=msg}toast(msg,!j.ok)}).catch(()=>{const x=$('aitest');if(x){x.disabled=false;x.textContent='Test AI'}toast('The ParseFlow server did not respond.',true)})}
+function chatHTML(){chatLoad();const L=BE&&BE.ask_llm;const on=L&&L.configured;
+ const head=`<div class="chat-h"><h3 style="margin:0">Ask Your Document</h3><span class="mbadge ${on?'ai':''}" title="${on?'Answers are written by '+esc(L.provider)+' from the pages ParseFlow retrieves':'No AI model configured: answers quote the document'}">${on?'AI · '+esc(L.model||L.provider):'Offline · quotes only'}</span>${on?`<button class="btn sm" id="aitest" onclick="aiTest()" title="Send one short real request to the AI model">Test AI</button>`:''}<span style="flex:1"></span>${CHAT.length?'<button class="btn sm" onclick="chatNew()">New chat</button>':''}</div>`;
+ const intro=CHAT.length?'':`<div class="chat-intro"><p>Ask about anything in this document — a term, a concept, an equation, a paragraph — or ask for a summary. ${on?'Answers separate <b>what the document says</b> (with page numbers) from <b>explanation</b> in simpler words.':'No AI model is configured, so answers are passages quoted from the document with their pages. Set <span class="mono">ASK_PROVIDER</span> on the server for explanations (a local model through Ollama works offline).'} Follow-up questions keep the context.</p><div class="chips">${chatChips().map(q=>`<button onclick="answerQ(this.textContent)">${esc(q)}</button>`).join('')}</div></div>`;
+ const msgs=CHAT.map(m=>m.role=='user'?`<div class="cm u">${esc(m.text)}</div>`:botHTML(m)).join('');
+ const input=`<div class="ask chat-in"><input id="qi" placeholder="${CHAT.length?'Ask a follow-up…':'e.g. Explain insertion sort step by step'}" onkeydown="if(event.key=='Enter'&&this.value.trim())answerQ(this.value)"><button class="btn pri" onclick="qi.value.trim()&&answerQ(qi.value)">Ask</button></div>`;
+ return head+intro+`<div class="chat-log">${msgs}</div>`+input}
+
+const STRAT={cell:'table lookup',section:'section',passage:'passage',page:'page overview'};
+function srvCard(it){const h=`<div style="color:var(--mu);font-size:12px">${esc(it.q)}</div>`;if(it.wait)return `<div class="card" style="margin-bottom:10px">${h}<p style="margin:6px 0 0;color:var(--mu)">Searching the document…</p></div>`;
+if(it.err)return `<div class="card" style="margin-bottom:10px">${h}<p style="margin:6px 0 0">${esc(it.err)}</p></div>`;const s=it.s;
+if(!s.found)return `<div class="card" style="margin-bottom:10px">${h}<p style="margin:6px 0 0">I couldn't find this in the document.</p>${s.note?`<div class="an">${esc(s.note)}${s.missing_terms&&s.missing_terms.length?' Not found: '+s.missing_terms.map(esc).join(', ')+'.':''}</div>`:''}${s.closest&&s.closest.length?`<div class="k">Closest passages</div>${s.closest.map(evHTML).join('')}`:''}</div>`;
+return `<div class="card" style="margin-bottom:10px">${h}<div class="k">Answer · ${STRAT[s.strategy]||s.strategy}${s.section?` · under “${esc(s.section)}”`:''}</div><div class="ans">${s.parts.map(partHTML).join('')}</div>
+<div class="k">Confidence</div>${s.confidence==null?'—':(s.confidence*100|0)+'%'} <span style="color:var(--mu)">(lowest evidence block, estimated)</span>${s.matched_terms&&s.matched_terms.length?`<div class="an">Matched: ${s.matched_terms.map(esc).join(', ')}${s.missing_terms&&s.missing_terms.length?` · not in the answer: ${s.missing_terms.map(esc).join(', ')}`:''}</div>`:''}
+<div class="k">Evidence</div>${s.evidence.map(evHTML).join('')}</div>`}
+function askChips(){if(!SRV())return ['What rotation is shown in the diagram?','What does page 2 explain?','What was the total revenue in FY24?','What does the handwritten note say?','What does the chart show?'];
+const c=[`What does page ${pg} explain?`],hs=DOC.blocks.filter(b=>b.type=='heading'&&b.content&&b.content.length<70&&!b.role&&!(b.furniture&&b.furniture.excluded)&&/^[A-Z\d]/.test(b.content)&&!/^\d{2,}\s/.test(b.content)&&b.content.split(/\s+/).length<=9&&!/\b(to|and|or|of|the|a|an|in|with|for|by|as|at)$/i.test(b.content.trim())&&/[a-z]{3}/i.test(b.content));
+hs.filter(b=>b.page>=pg).concat(hs).slice(0,3).forEach(b=>{const t=b.content.replace(/^[\d.\s]+/,'').trim();if(t&&!c.includes(t))c.push(t)});
+const tb=DOC.blocks.find(b=>b.type=='table'&&b.rows&&b.rows.length>2&&b.page>=pg)||DOC.blocks.find(b=>b.type=='table'&&b.rows&&b.rows.length>2);
+if(tb){const r=tb.rows.find((r,i)=>i>0&&r[0]&&r.slice(1).some(x=>/\d/.test(x))),hc=r?r.findIndex((x,j)=>j>0&&/\d/.test(x)):-1,hd=hc>0?tb.rows.slice(0,3).map(x=>x[hc]).filter(Boolean).pop():'';if(r&&hd&&/^[A-Z][^\n]{1,40}$/.test(r[0])&&/^[A-Za-z0-9$€£(][^\n]{0,30}$/.test(hd))c.push(`${r[0]} ${hd}`)}
+return c.slice(0,5)}
+function renderTabs(){$('tabs').innerHTML=TABS.map(t=>`<button class="${t==tab?'on':''}" onclick="tab='${t}';renderTabs()">${t}</button>`).join('');const p=$('pane');
+if(tab=='Inspector'){const b=DOC.blocks.find(x=>x.block_id==sel);if(b&&DOC.lite&&!b._full)fullPage(b.page);p.innerHTML=!b?'<p style="color:var(--mu)">Select a region on the page or in Blocks to inspect its content and provenance.</p>':`<h3 style="margin:0 0 6px">${isVis(b)?'Visual Analysis':'Block'} · <span class="mono">${b.type}</span></h3>${pill(b.verification)}
+<div class="k">Extraction confidence · ${b.confidence_type}</div><div class="ringw"><div class="ring" style="--p:${b.confidence*100|0};--c:${COL[b.verification]}"><b>${b.confidence*100|0}%</b></div><div style="color:var(--mu);font-size:12px">${/estimated|self-reported/.test(b.confidence_type)?'Estimated / self-reported — not a measured accuracy.':b.confidence_type=='ocr'?'Mean OCR word confidence.':'Text-layer extraction.'}</div></div>${SRV()?bAskHTML(b):''}
+<div class="k">Extractor</div>${EXT[b.extractor]} <span class="pill">${LANE[b.extractor]}</span>
+<div class="k">Source</div><span class="mono">Page ${b.page} · ${b.block_id} · reading order ${b.reading_order}</span><div class="k">Bounding box</div><span class="mono">[${b.bbox.join(', ')}]</span>
+${b.structure_text?`<div class="k">Structure read from the drawing</div><div style="font-size:13px;line-height:1.5">${esc(b.structure_text)}</div>`:''}${b.content!=null&&(b.inline_math||(b.type=='equation'&&b.latex))?`<div class="k">Rendered</div><div class="amr">${b.type=='equation'&&b.latex?`\\[${esc(b.latex)}\\]`:esc(b.content)}</div>`:''}<div class="k">${b.structure_text?'Text labels inside the figure':'Extracted content'}</div>${b.content==null?'<div class="card" style="border-color:var(--er)"><b>Extraction uncertain</b><p>ParseFlow could not confidently interpret this region. Flagged for review instead of guessed.</p></div>':(b.rows||b.cells)?tblBlock(b):`<pre>${esc(b.content)}</pre>`}
+${b.latex?`<div class="k">LaTeX</div><pre>${esc(b.latex)}</pre>`:''}${b.ocr_text?`<div class="k">OCR text from region (labels only)</div><pre>${esc(b.ocr_text)}</pre>`:''}${b.data?`<div class="k">Chart data</div><pre>${esc(JSON.stringify(b.data))}</pre>`:''}${b.relationships&&b.relationships.length&&b.type!='diagram'?`<div class="k">Relationships</div><pre>${esc(b.relationships.join('\n'))}</pre>`:''}${b.evidence?`<div class="k">Verification evidence</div>${esc(b.evidence)}`:''}${b.evidence_detail?`<div style="color:var(--mu);font-size:12px;margin-top:3px">Basis: ${esc(b.evidence_detail.basis)} · independent: ${b.evidence_detail.independent?'yes':'no'} · confidence: ${esc(b.evidence_detail.confidence_method)}</div>`:''}${b.furniture?`<div class="k">Page furniture (${esc(b.furniture.role)}) · score ${b.furniture.score}${b.furniture.excluded?' · excluded from Markdown':' · kept'}</div><pre>${esc(b.furniture.reasons.join('\n'))}</pre>`:''}${b.transforms&&b.transforms.length?`<div class="k">Normalisation / reconstruction applied</div><pre>${esc(b.transforms.join('\n'))}</pre>`:''}${b.raw_text&&b.raw_text!==b.content?`<details><summary>Original extracted text</summary><pre>${esc(b.raw_text)}</pre></details>`:''}${b.elements?`<div class="k">Elements</div><pre>${esc(b.elements.join('\n'))}</pre>`:''}
+${b.warnings.map(w=>`<div class="warn">⚠ ${esc(w)}</div>`).join('')}<div style="margin-top:14px"><button class="btn pri" onclick="source('${b.block_id}')">View Source</button></div>`}
+else if(tab=='Overview'){const bl=DOC.blocks,c=v=>bl.filter(b=>b.verification==v).length,lanes={};bl.forEach(b=>{(lanes[b.extractor]??=[]).push(b)});
+p.innerHTML=`<h3 style="margin:0 0 8px">Document Health</h3><div class="grid">${[['Pages',DOC.pages.length,''],['Blocks',bl.length,''],['Tables',bl.filter(b=>b.type=='table').length,''],['Visuals',bl.filter(b=>isViz(b)||isHW(b)).length,''],['Verified',c('verified'),'g'],['Flagged',c('review')+c('failed'),'w']].map(([a,b,k])=>`<div class="stat ${k}"><b>${b}</b><span>${a}</span></div>`).join('')}</div>
+<h3 style="margin:18px 0 6px">Pipeline</h3>${['Detect','Analyze','Route','Extract','Assemble','Verify','Output'].map(s=>`<div class="mono" style="font-size:12px"><span style="color:var(--ok)">✓</span> ${s}</div>`).join('')}
+${DOC.timings?`<div style="color:var(--mu);font-size:12px;margin-top:6px">Stage timings: ${Object.entries(DOC.timings).map(([k,v])=>esc(k)+' '+(+v).toFixed(2)+'s').join(' · ')}</div>`:''}<h3 style="margin:18px 0 6px">Intelligent Router</h3>${Object.entries(lanes).map(([e,a])=>`<div class="st"><span>${EXT[e]}</span><small class="mono">${a.length} region${a.length>1?'s':''} · ${LANE[e]}</small></div>`).join('')}
+<p style="color:var(--mu);font-size:12px">Vision processing is used for ${bl.filter(b=>LANE[b.extractor]=='VISION').length} of ${bl.length} regions; digital text and tables stay local.</p>${warnHTML()}`}
+else if(tab=='Blocks'){const f={All:()=>1,Text:b=>['paragraph','list','caption','header','footer'].includes(b.type),Heading:b=>b.type=='heading',Table:b=>b.type=='table',Chart:b=>b.type=='chart',Figure:b=>b.type=='figure',Diagram:b=>b.type=='diagram',Equation:b=>b.type=='equation',Handwritten:b=>b.type.startsWith('handwritten'),'Header/Footer':b=>!!(b.furniture&&b.furniture.excluded),Warning:b=>b.verification!='verified'};
+p.innerHTML=`<div class="chips">${Object.keys(f).map(k=>`<button class="${k==flt?'on':''}" onclick="flt='${k}';renderTabs()">${k}</button>`).join('')}</div>`+(()=>{const L=DOC.blocks.filter(f[flt]);return cap('blk'+flt,L,200).map(row).join('')+more('blk'+flt,L.length,200)})()}
+else if(tab=='Tables'){const t=DOC.blocks.filter(b=>b.type=='table'&&!b.continuation_of);p.innerHTML=t.length?cap('tbl',t,25).map((b,i)=>`<div class="card" style="margin-bottom:10px"><b>Table ${String(i+1).padStart(2,'0')}</b> ${pill(b.verification)}<div style="color:var(--mu);font-size:12px;margin:3px 0 8px">Confidence ${b.confidence} (${b.confidence_type}) · ${b.merged?'pages '+b.merged.pages.join(', ')+' (continued across a page break, joined)':'page '+b.page}</div>${b.merged?tblBlock(Object.assign({},b,{cells:b.merged.cells,rows:b.merged.rows,markdown:b.merged.markdown||''})):tblBlock(b)}${b.warnings&&b.warnings.length?b.warnings.map(w=>`<div class="warn">${esc(w)}</div>`).join(''):''}<div style="margin-top:8px"><button class="btn sm" onclick="source('${b.block_id}')">View Source</button></div></div>`).join('')+more('tbl',t.length,25):'No tables detected.'}
+else if(tab=='Visuals'){const L=DOC.blocks.filter(b=>isViz(b)||isHW(b));
+ const card=b=>{const hw=isHW(b);return `<div class="card" style="margin-bottom:10px"><div class="flow"><span class="mono">${b.type}</span>${pill(b.verification)}<span style="margin-left:auto;color:var(--mu)">p${b.page} · ${(b.confidence*100|0)}%</span></div><div style="background:#fff;border-radius:4px;margin:8px 0;overflow:hidden;height:${hw?70:90}px"><svg viewBox="${b.bbox[0]} ${b.bbox[1]} ${b.bbox[2]-b.bbox[0]} ${b.bbox[3]-b.bbox[1]}" style="width:100%;height:100%" preserveAspectRatio="xMidYMid meet">${pageSVG(b.page).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg></div>
+ ${b.content==null?'<div style="font-size:13px">⚠ Low confidence — review source</div>':hw?`<div class="k" style="margin-top:0">Transcription</div><pre style="margin:2px 0">${esc(b.content)}</pre>`:b.structure_text?'':`<div style="font-size:13px">${esc(b.content)}</div>`}
+ ${b.elements?`<div class="k">Elements</div><div class="fl">${b.elements.map(e=>`<span>${esc(e)}</span>`).join('')}</div>`:''}${b.type=='diagram'&&b.relationships.length?`<div class="k">Relationships</div><pre>${esc(b.relationships.join('\n'))}</pre>`:''}${b.latex?`<div class="k">LaTeX</div><pre>${esc(b.latex)}</pre>`:''}
+ ${b.structure_text?`<div class="k">Structure read from the drawing</div><div style="font-size:12.5px;max-height:120px;overflow:auto">${esc(b.structure_text)}</div>`:''}
+ <div style="margin-top:8px;display:flex;gap:6px"><button class="btn sm" onclick="source('${b.block_id}')">View Source</button>${SRV()?`<button class="btn sm" onclick="pick('${b.block_id}');setTimeout(()=>{const i=$('bqi');i&&i.focus()},60)">Ask about this</button>`:''}</div></div>`};
+ p.innerHTML=`<div style="color:var(--mu);font-size:12px;margin-bottom:10px">Diagrams, charts, figures, equations, handwriting and other pictures · ${L.length} found</div>`+(L.length?cap('vis'+tab,L,30).map(card).join('')+more('vis'+tab,L.length,30):`<div class="card" style="color:var(--mu)">No diagrams, charts, equations, handwriting or pictures detected in this document.</div>`)}
+else if(tab=='JSON'){p.innerHTML=(DOC.lite?`<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap"><a class="btn sm" href="/api/document/${DOC.document_id}" download="parseflow_twin.json">Download full JSON</a><span style="font-size:12px;color:var(--mu)">Large document: shown without the per-block provenance details (they load in the Inspector). The download is complete.</span></div>`:`<div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn sm" onclick="navigator.clipboard.writeText(JSON.stringify(DOC,null,2))">Copy</button><button class="btn sm" onclick="dl('parseflow_twin.json',JSON.stringify(DOC,null,2),'application/json')">Download</button></div>`)+jsonHTML()}
+else if(tab=='Markdown'){const be=DOC.markdown!=null||!!DOC.lite;p.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap"><button class="btn sm" onclick="navigator.clipboard.writeText(mdText())">Copy</button><button class="btn sm" onclick="dl('parseflow.md',mdText(),'text/markdown')">Download</button>${be?`<label style="font-size:12px;color:var(--mu)"><input type="checkbox" ${MDF?'checked':''} onchange="toggleFurniture(this.checked)"> include running headers/footers</label>`:''}</div><div style="font-size:11px;color:var(--mu);margin-bottom:6px">${be?'Canonical Markdown generated by the ParseFlow backend (tables with merged cells are HTML; equations are LaTeX).':'Markdown generated in the browser (demo / browser mode).'}</div>${(()=>{const t=mdText(),CAP=400000;return t.length>CAP?`<div class="warn">Showing the first ${(CAP/1000)|0} KB of ${(t.length/1e6).toFixed(1)} MB. Copy and Download give the whole Markdown.</div><pre>${esc(t.slice(0,CAP))}</pre>`:`<pre>${esc(t)}</pre>`})()}`}
+else if(SRV()){p.innerHTML=chatHTML()}
+else{p.innerHTML=`<h3 style="margin:0 0 8px">Ask Your Document</h3><div class="ask"><input id="qi" placeholder="${SRV()?'e.g. What does page 1 explain?':'e.g. What rotation is shown in the diagram?'}" onkeydown="if(event.key=='Enter'&&this.value.trim())answerQ(this.value)"><button class="btn" onclick="qi.value.trim()&&answerQ(qi.value)">Ask</button></div><div class="chips">${askChips().map(q=>`<button onclick="answerQ(this.textContent)">${esc(q)}</button>`).join('')}</div>`+aq.map(it=>it.r===undefined?srvCard(it):`<div class="card" style="margin-bottom:10px"><div style="color:var(--mu);font-size:12px">${esc(it.q)}</div>${it.r?`<div class="k">Answer</div>${esc(it.r.ans)}<div class="k">Confidence</div>${(it.r.conf*100|0)}% <span style="color:var(--mu)">(lowest evidence block, ${'estimated'})</span><div class="k">Evidence</div>${it.r.top.map(b=>`<div class="flow" style="margin:3px 0"><span class="mono">p${b.page} · ${b.block_id}</span><button class="btn sm" onclick="source('${b.block_id}')">View Source</button></div>`).join('')}`:`<p style="margin:6px 0 0">I couldn't confidently verify this from the document.</p>`}</div>`).join('')+`<p style="color:var(--mu);font-size:12px">${SRV()?'Answers are copied from the extracted blocks (keyword, heading and table matching) with their source regions — no external model, nothing generated.':'Answers use keyword retrieval over the extracted blocks only — no external model.'}</p>`}if(['Ask','Inspector','Blocks','Tables','Visuals'].includes(tab))mathIn(p)}
+function dl(n,t,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function show(v){['landing','procv','app','ws'].forEach(i=>$(i).classList.toggle('on',i==v));if(v!='landing')clearTimeout(BNT);if(v!='ws')clearTimeout(WSPOLL)}
+const STG=[['DETECT','Document detected'],['ANALYZE','Pages and regions identified'],['ROUTE','Content regions classified'],['EXTRACT','Extracting content'],['ASSEMBLE','Reconstructing document'],['VERIFY','Checking evidence'],['OUTPUT','Generating Markdown + JSON']];
+/*PB*/
+function pdfBlocks(items,W,H){ // items: [{s,x,y,h,w}] in page pixels (y = baseline). Pure function.
+ const its=items.filter(i=>i.s&&i.s.trim()).sort((a,b)=>a.y-b.y||a.x-b.x),lines=[];
+ for(const it of its){const l=lines.find(l=>Math.abs(l.y-it.y)<Math.max(l.h,it.h)*.45&&it.x>l.x0-2);if(l){l.its.push(it);l.h=Math.max(l.h,it.h)}else lines.push({y:it.y,h:it.h,x0:it.x,its:[it]})}
+ const len=p=>p.reduce((a,i)=>a+i.s.length,0),split=l=>{l.its.sort((a,b)=>a.x-b.x);const parts=[[l.its[0]]];for(let k=1;k<l.its.length;k++){const p=l.its[k-1];if(l.its[k].x-(p.x+p.w)>l.h*2.5)parts.push([]);parts[parts.length-1].push(l.its[k])}return parts};
+ const gs=[];for(const l of lines){const p=split(l);if(p.length==2&&p.every(q=>len(q)>=20))gs.push(p[1][0].x)}
+ gs.sort((a,b)=>a-b);const gut=gs.length>=2&&gs[gs.length>>1]-gs[0]<40&&gs[gs.length-1]-gs[gs.length>>1]<40?gs[gs.length>>1]:null;
+ const segs=[];for(const l of lines){let parts=split(l);
+  if(parts.length>1&&!parts.every(q=>len(q)>=20)){parts=null;if(gut!==null){const Lf=l.its.filter(i=>i.x<gut-l.h*.5),R=l.its.filter(i=>i.x>=gut-l.h*.5);if(Lf.length&&R.length&&len(Lf)>=20&&R[0].x-(Lf[Lf.length-1].x+Lf[Lf.length-1].w)>l.h*1.2)parts=[Lf,R]}}
+  if(parts&&parts.length>1)parts.forEach(p=>segs.push({y:l.y,h:l.h,x0:p[0].x,its:p}));else segs.push(l)}
+ const L=segs.map(l=>{l.its.sort((a,b)=>a.x-b.x);let t='',px=null;for(const i of l.its){if(px!==null&&i.x-px>l.h*.15&&!/\s$/.test(t))t+=' ';t+=i.s;px=i.x+i.w}return{t:t.trim(),h:l.h,x0:Math.min(...l.its.map(i=>i.x)),x1:Math.max(...l.its.map(i=>i.x+i.w)),y0:l.y-l.h*.9,y1:l.y+l.h*.25}}).filter(l=>l.t).sort((a,b)=>a.y0-b.y0);
+ const bl=[];
+ for(const l of L){let best=null;for(const b of bl){const gap=l.y0-b.y1;if(gap<l.h*.9&&gap>-l.h*.5&&Math.abs(l.x0-b.x0)<l.h*4&&Math.abs(l.h-b.h)<l.h*.25&&(!best||b.y1>best.y1))best=b}
+  if(best){best.lines.push(l.t);best.x0=Math.min(best.x0,l.x0);best.x1=Math.max(best.x1,l.x1);best.y1=Math.max(best.y1,l.y1)}else bl.push({lines:[l.t],x0:l.x0,x1:l.x1,y0:l.y0,y1:l.y1,h:l.h})}
+ const hs=L.map(l=>l.h).sort((a,b)=>a-b),med=hs.length?hs[hs.length>>1]:10;
+ return bl.map(b=>{const t=b.lines.join(' ').replace(/(\w)- (\w)/g,'$1$2');const bu=b.lines.every(x=>/^(\u2022|[-*\u25cf]|\d+[.)])\s/.test(x));
+  const type=bu?'list':(b.h>=med*1.2&&b.lines.length<=2&&t.length<160)?'heading':/^(fig(ure)?|table)\.?\s*\d+/i.test(t)&&t.length<220?'caption':'paragraph';
+  return{type,content:bu?b.lines.join('\n'):t,bbox:[b.x0,b.y0,b.x1,b.y1].map(v=>Math.max(0,Math.round(v)))}})}
+function orderBlocks(bs,W){bs=bs.slice().sort((a,b)=>a.bbox[1]-b.bbox[1]||a.bbox[0]-b.bbox[0]);const res=[];let band=[],cols=false;
+ const vo=(a,b)=>Math.min(a.bbox[3],b.bbox[3])-Math.max(a.bbox[1],b.bbox[1])>5;
+ const flush=()=>{if(!band.length)return;const Lf=band.filter(i=>(i.bbox[0]+i.bbox[2])/2<W/2),R=band.filter(i=>!Lf.includes(i));
+  if((Lf.length>=2&&R.length>=1&&R.some(r=>Lf.filter(l=>vo(r,l)).length>=2))||(R.length>=2&&Lf.length>=1&&Lf.some(l=>R.filter(r=>vo(l,r)).length>=2))||(Lf.length>=2&&R.length>=2)){cols=true;res.push(...Lf.sort((a,b)=>a.bbox[1]-b.bbox[1]),...R.sort((a,b)=>a.bbox[1]-b.bbox[1]))}else res.push(...band);band=[]};
+ for(const b of bs){if(b.bbox[2]-b.bbox[0]>.6*W){flush();res.push(b)}else band.push(b)}flush();return{order:res,cols}}
+function inkRegions(d,W,H,boxes){ // d: RGBA bytes. Finds ink the text layer does not explain: tables, drawings, handwriting. Pure function.
+ const f=4,cw=Math.ceil(W/f),ch=Math.ceil(H/f),m=new Uint8Array(cw*ch);
+ for(let y=0;y<H;y++){const r=(y/f|0)*cw;for(let x=0;x<W;x++){const i=(y*W+x)*4;if(.3*d[i]+.59*d[i+1]+.11*d[i+2]<140)m[r+(x/f|0)]=1}}
+ for(const b of boxes){const x0=Math.max(0,(b[0]-3)/f|0),x1=Math.min(cw-1,(b[2]+3)/f|0),y0=Math.max(0,(b[1]-3)/f|0),y1=Math.min(ch-1,(b[3]+3)/f|0);for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)m[y*cw+x]=0}
+ const k=5,t=new Uint8Array(m.length),g=new Uint8Array(m.length);
+ for(let y=0;y<ch;y++){let l=-1e9;for(let x=0;x<cw;x++){if(m[y*cw+x])l=x;if(x-l<=k)t[y*cw+x]=1}l=1e9;for(let x=cw-1;x>=0;x--){if(m[y*cw+x])l=x;if(l-x<=k)t[y*cw+x]=1}}
+ for(let x=0;x<cw;x++){let l=-1e9;for(let y=0;y<ch;y++){if(t[y*cw+x])l=y;if(y-l<=k)g[y*cw+x]=1}l=1e9;for(let y=ch-1;y>=0;y--){if(t[y*cw+x])l=y;if(l-y<=k)g[y*cw+x]=1}}
+ const seen=new Uint8Array(m.length),out=[];
+ for(let s0=0;s0<g.length;s0++){if(!g[s0]||seen[s0])continue;const st=[s0];seen[s0]=1;let ink=0,x0=1e9,y0=1e9,x1=-1,y1=-1;
+  while(st.length){const c=st.pop(),cx=c%cw,cy=(c/cw)|0;if(m[c]){ink++;if(cx<x0)x0=cx;if(cx>x1)x1=cx;if(cy<y0)y0=cy;if(cy>y1)y1=cy}
+   for(const n of [cx>0?c-1:-1,cx<cw-1?c+1:-1,cy>0?c-cw:-1,cy<ch-1?c+cw:-1])if(n>=0&&g[n]&&!seen[n]){seen[n]=1;st.push(n)}}
+  if(ink>=12&&(x1-x0+1)*f>=24&&(y1-y0+1)*f>=24)out.push([Math.max(0,x0*f-8),Math.max(0,y0*f-8),Math.min(W,(x1+1)*f+8),Math.min(H,(y1+1)*f+8)])}
+ return out.sort((a,b)=>a[1]-b[1]||a[0]-b[0])}
+/*PBEND*/
+let BE=null,poll=null,ti=-1,AUTO=false,LI={},PJ=null;
+const TOUR=[
+['Open ParseFlow','“Most document AI systems extract information. ParseFlow preserves the evidence behind it.” Document Health below is computed from the processed document.',()=>{sel=null;pg=1;tab='Overview';renderPage();renderTabs()}],
+['Understand → Route → Extract','Seven real pipeline stages. The router sends digital text and tables to local parsers; only handwriting, diagrams and charts go to vision.',()=>{tab='Overview';renderTabs();$('pane').scrollTop=260}],
+['Page 2 is a scan','No text layer. ParseFlow finds handwriting, a diagram, an equation and code — region by region, not as one blob.',()=>{sel=null;tab='Blocks';flt='Handwritten';pg=2;renderPage();renderTabs()}],
+['Click handwriting','Transcription, confidence, extractor, page and bounding box — all preserved. “Review” because a model alone can’t verify handwriting.',()=>pick('hand_2_02')],
+['Click the diagram','Structured understanding: nodes, relationships, and the rotation arrow. The source crop stays available as evidence.',()=>pick('diag_2_01')],
+['Handwritten code & maths','Code keeps its formatting. The equation is returned as LaTeX with its own confidence.',()=>pick('code_2_01')],
+['Reconstructed table','Rows and columns rebuilt from page 1. Every cell is checked against the PDF text layer — that’s what “Verified” means.',()=>{source('tbl_1_01');tab='Tables';renderTabs()}],
+['Ask your document','Answers come only from extracted blocks, with evidence and a View Source link.',()=>{source('diag_2_01');tab='Ask';aq=[];answerQ('What rotation is shown in the diagram?')}],
+['Flagged, not hallucinated','Confidence 41%. ParseFlow withholds the content and flags the region instead of guessing.',()=>pick('hand_2_03')],
+['ParseFlow','It shows you where it came from — and when it isn’t sure, it tells you.',()=>{sel=null;tab='Overview';renderTabs();renderPage()}]];
+function tourGo(i){if(i<0)i=0;if(i>=TOUR.length)return tourEnd();ti=i;const t=TOUR[i];t[2]();$('tn').textContent=`STEP ${i+1} / ${TOUR.length}`;$('th').textContent=t[0];$('tp').textContent=t[1];$('td').innerHTML=TOUR.map((_,j)=>`<i class="${j<=i?'on':''}"></i>`).join('');$('tnx').textContent=i==TOUR.length-1?'Finish':'Next';$('tour').classList.add('on')}
+function tourEnd(){ti=-1;$('tour').classList.remove('on')}
+function present(){AUTO=true;startDemo()}
+document.addEventListener('keydown',e=>{if(ti<0||/INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key=='ArrowRight'||e.key==' '){e.preventDefault();tourGo(ti+1)}else if(e.key=='ArrowLeft')tourGo(ti-1);else if(e.key=='Escape')tourEnd()});
+function drawStages(l){$('stages').innerHTML=l.map(s=>`<div class="st ${s.state=='done'?'dn':s.state=='running'?'run':''}"><b>${s.state=='done'?'✓':s.state=='running'?'⟳':'○'}</b><span class="mono">${s.name}</span><small>${esc(s.detail)}</small></div>`).join('')}
+function fileCard(name,meta){$('pfile').innerHTML=`<div class="nm">${esc(name)}</div><div class="mt">${meta.map(m=>`<span>${esc(m)}</span>`).join('')}</div>`}
+function run(name,meta){show('procv');fileCard(name,meta);$('upb').style.width='100%';let i=0;const l=()=>STG.map((s,j)=>({name:s[0],detail:s[1],state:j<i?'done':j==i?'running':'pending'}));drawStages(l());
+const t=setInterval(()=>{i++;drawStages(l());if(i>=STG.length){clearInterval(t);setTimeout(open,350)}},380)}
+function open(){sel=null;pg=1;tab='Overview';aq=[];CHAT=[];CHATDOC=null;FULLREQ={};MDREQ=false;BCHAT={};BLOADED={};$('shareb').style.display=SRV()&&DOC.real&&!DOC.local&&!DOC.demo?'':'none';LIM={};MDF=false;MDX=null;$('fname').textContent=DOC.filename;$('demob').style.display=DOC.demo?'':'none';show('app');renderPage();renderTabs();capBadge();if(AUTO){AUTO=false;setTimeout(()=>tourGo(0),600)}}
+function startDemo(){DOC=DEMO;run('demo_mixed_document.pdf',['PDF (synthetic)','2 pages','demo sample'])}
+function fail(code,t,m){const W=!!ME;if(W){show('ws');renderWs()}else show('landing');$(W?'wserr':'uerr').innerHTML=`<div class="err"><b class="mono">${code}</b> · ${t}<div style="color:var(--mu);margin-top:4px">${m}</div>${code=='PF-501'?'<div style="margin-top:8px"><button class="btn sm" onclick="startDemo()">Open the demo document instead</button></div>':''}</div>`}
+function capBadge(){const t=BE?`<i></i>Backend online · OCR ${BE.ocr?'Tesseract':'unavailable'} · Vision ${BE.vision.configured?BE.vision.model:'not configured'}`:'<i></i>Browser mode · vision via Claude (asks consent) · OCR needs server';['beb','beb2','beb3'].forEach(i=>{const e=$(i);if(e){e.innerHTML=t;e.className='cap '+(BE?'on':'off')}})}
+fetch('/api/health').then(r=>r.json()).then(h=>{if(h&&h.ok)BE=h}).catch(()=>{}).finally(()=>{capBadge();(BE?refreshMe():Promise.resolve()).then(()=>{lpAuth();if(BE&&hashRoute())return;if(ME&&$('landing').classList.contains('on'))goWs()})});
+function upload(f,ext,sz){show('procv');fileCard(f.name,[ext.toUpperCase(),sz,'uploading…']);$('upb').style.width='0';drawStages(STG.map(s=>({name:s[0],detail:'',state:'pending'})));
+const fd=new FormData();fd.append('file',f);const x=new XMLHttpRequest();x.open('POST','/api/process');
+x.upload.onprogress=e=>{if(e.lengthComputable)$('upb').style.width=(e.loaded/e.total*100)+'%'};
+x.onerror=()=>fail('PF-501','Backend unreachable','The ParseFlow server did not respond. Start it with ./run.sh.');
+x.onload=()=>{let j;try{j=JSON.parse(x.responseText)}catch(e){return fail('PF-500','Server Error','The server returned an unexpected response.')}
+if(j.error)return fail(j.error.code,j.error.title,j.error.message);track(j,sz)};x.send(fd)}
+function track(j,sz){show('procv');$('upb').style.width='100%';fileCard(j.filename,[j.type,sz,j.pages+' page'+(j.pages>1?'s':'')]);clearInterval(poll);
+poll=setInterval(()=>fetch('/api/status/'+j.document_id).then(r=>r.json()).then(st=>{if(st.error&&!st.stages)return;drawStages(st.stages);if(st.status=='queued')$('stages').insertAdjacentHTML('afterbegin',`<div class="st run"><b>⏳</b><span class="mono">QUEUED</span><small>${st.queue_position>1?(st.queue_position-1)+' document'+(st.queue_position>2?'s':'')+' ahead of this one':'starting as soon as a worker is free'}</small></div>`);
+if(st.status=='failed'){clearInterval(poll);fail(st.error.code,st.error.title,st.error.message)}
+if(st.status=='complete'){clearInterval(poll);fetchDoc(j.document_id).then(d=>{DOC=d;if(j.filename)DOC.filename=j.filename;setTimeout(open,400)}).catch(()=>fail('PF-500','Server Error','Could not load the processed document.'))}}).catch(()=>{clearInterval(poll);fail('PF-501','Backend unreachable','Lost connection to the ParseFlow server.')}),450)}
+
+function loadPdfJs(){return PJ||(PJ=new Promise((ok,no)=>{if(window.pdfjsLib)return ok(window.pdfjsLib);const e=document.createElement('script');e.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';e.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';ok(pdfjsLib)};e.onerror=()=>{PJ=null;no(new Error('load'))};document.head.appendChild(e)}))}
+const FLAG_MSG='No text layer on this page (scanned, photographed or handwritten). OCR, handwriting and diagram extraction need the ParseFlow server; the page image is preserved and flagged instead of guessed.';
+function flagBlock(n,W,H){return{block_id:`unk_${n}_01`,type:'unknown',content:null,page:n,bbox:[0,0,W,H],reading_order:1,confidence:.3,confidence_type:'heuristic (estimated)',extractor:'fallback',verification:'failed',relationships:[],warnings:[FLAG_MSG],preserved_image:true,evidence:'no extractor available in browser mode'}}
+const VT=new Set(['handwritten_text','handwritten_code','equation','diagram','chart','figure','table','paragraph','heading','list','unknown']);
+const VEX={handwritten_text:'vision_handwriting',handwritten_code:'vision_handwriting',paragraph:'vision_handwriting',heading:'vision_handwriting',list:'vision_handwriting',equation:'math_vision',diagram:'vision_diagram',figure:'vision_diagram',unknown:'vision_diagram',chart:'vision_chart',table:'vision_table'};
+const vprompt=sc=>`You are a document-extraction engine. The image is ONE page of a document${sc?' with NO text layer (scanned, photographed or handwritten), so ALSO transcribe the printed or handwritten body text as paragraph / heading / handwritten_text items':'. Its plain printed body text is already extracted separately, so DO NOT repeat ordinary body text'}.
+List every region of these kinds: table (rows as arrays of cell strings, header row first; repeat or leave blank for merged cells), handwritten_text, handwritten_code (keep code exactly, line by line), equation (give latex), diagram (flowcharts, trees, graphs, including hand-drawn AVL / binary search trees), chart, figure.
+For tree or graph diagrams: elements = every node exactly as written (value and any balance factor), relationships = every edge like "30 -left-> 20", and also any rotation arrows or annotations written near it (for example "LL case: right rotation about 30"). Give a one-sentence description.
+Respond with JSON only: {"items":[{"type":"table|handwritten_text|handwritten_code|equation|diagram|chart|figure|paragraph|heading|unknown","content":string|null,"description":string|null,"rows":[[string]]|null,"latex":string|null,"elements":[string],"relationships":[string],"chart":{"title":null,"chart_type":null,"axes":null,"legend":null,"data":null}|null,"bbox":[x1,y1,x2,y2],"confidence":0.0}]}
+bbox is normalised 0-1000 relative to the image. Rules: transcribe exactly; never guess illegible text (use content null and confidence below 0.5); never invent chart values or table cells; if the page has no such regions return {"items":[]}.`;
+const nrm=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,''),ar=r=>Math.max(0,r[2]-r[0])*Math.max(0,r[3]-r[1]),ovf=(a,b)=>{const i=ar([Math.max(a[0],b[0]),Math.max(a[1],b[1]),Math.min(a[2],b[2]),Math.min(a[3],b[3])]);return ar(a)?i/ar(a):0};
+function vItems(items,n,W,H){const out=[];for(const it of items){if(!it||typeof it!='object')continue;let t=VT.has(it.type)?it.type:'unknown',conf=Math.max(0,Math.min(.95,+it.confidence||.5)),rows=null;
+ if(t=='table'){rows=Array.isArray(it.rows)?it.rows.map(r=>Array.isArray(r)?r.map(c=>String(c??'').trim()):[]).filter(r=>r.some(Boolean)):null;if(!rows||rows.length<2||Math.max(...rows.map(r=>r.length))<2){t='unknown';rows=null}}
+ let content=it.content||(['diagram','chart','figure','unknown'].includes(t)?it.description:null);if(t=='table')content=`Table with ${rows.length} rows`;
+ const w=[],r=it.bbox;let bb=[0,0,W,H];if(Array.isArray(r)&&r.length==4&&r.every(v=>typeof v=='number'&&v>=0&&v<=1000)&&r[2]-r[0]>8&&r[3]-r[1]>8)bb=[r[0]/1000*W,r[1]/1000*H,r[2]/1000*W,r[3]/1000*H].map(Math.round);else w.push('Model gave no valid region box; using the whole page.');
+ if(!content){conf=Math.min(conf,.45);w.push('Low confidence — review source. Content withheld rather than guessed.')}
+ const ch=it.chart&&typeof it.chart=='object'?it.chart:{},data=Array.isArray(ch.data)&&ch.data.length?ch.data:null;if(t=='chart'&&!data)w.push('Chart values not extracted — trend described only; no values invented.');
+ const b={block_id:'',type:t,content,page:n,bbox:bb,reading_order:0,confidence:+conf.toFixed(2),confidence_type:'model (self-reported)',extractor:VEX[t],verification:'review',relationships:t=='diagram'&&Array.isArray(it.relationships)?it.relationships.map(String):[],warnings:w,evidence:'model self-reported only'};
+ if(rows)b.rows=rows;if(t=='equation'&&it.latex)b.latex=String(it.latex);if(Array.isArray(it.elements)&&it.elements.length)b.elements=it.elements.map(String);if(t=='chart'){if(ch.chart_type)b.chart_type=ch.chart_type;if(ch.title)b.title=ch.title;if(data)b.data=data}
+ out.push(b)}return out}
+function verifyV(b,norm){if(!b.content){b.verification='failed';b.evidence='model returned no content';return}
+ if(b.type=='table'&&norm){const cells=b.rows.flat().filter(Boolean),fr=cells.filter(c=>nrm(c)&&norm.includes(nrm(c))).length/Math.max(1,cells.length);b.evidence=`cells found in text layer: ${Math.round(fr*100)}%`;
+  if(fr>=.9&&b.confidence>=.85){b.verification='verified';return}b.warnings.push(fr>=.9?'Confidence below 0.85 — review.':'Some table cells are not in the page text layer — review.');b.verification=b.confidence>=.6?'review':'failed';return}
+ b.verification=b.confidence>=.6?'review':'failed';b.warnings.push('Model self-reported confidence; no independent evidence available.')}
+function regionBlock(n,r,why){return{block_id:'',type:'figure',content:null,page:n,bbox:r,reading_order:0,confidence:.3,confidence_type:'heuristic (estimated)',extractor:'fallback',verification:'failed',relationships:[],warnings:['Visual region detected (ink the text layer does not explain: drawing, table or handwriting). '+why],preserved_image:true,evidence:'region detected, not interpreted'}}
+const PRE={table:'tbl',chart:'chart',diagram:'diag',equation:'eq',handwritten_text:'hand',handwritten_code:'code',figure:'fig',unknown:'unk',caption:'cap'};
+let SMP=null;
+async function getSample(){if(!SMP)SMP=(window.claude&&claude.use?Promise.race([claude.use('sample'),new Promise(r=>setTimeout(()=>r(null),6000))]):Promise.resolve(null)).catch(()=>null);return SMP}
+async function localProcess(f,ext,sz){show('procv');fileCard(f.name,[ext.toUpperCase(),sz,'browser mode']);$('upb').style.width='100%';
+ const st=STG.map(s=>({name:s[0],detail:'',state:'pending'})),go=(i,d)=>{st.forEach((x,k)=>x.state=k<i?'done':k==i?'running':'pending');if(d!==undefined)st[i].detail=d;drawStages(st)},det=(i,d)=>{st[i].detail=d;drawStages(st)};LI={};
+ try{go(0,'');const pg=[],warn=[];let pdf=null,pj=null,N=1;
+  if(ext=='pdf'){try{pj=await loadPdfJs()}catch(e){return fail('PF-501','PDF engine unavailable','Could not load the in-browser PDF engine (pdf.js). Check your connection, or run the full ParseFlow server with ./run.sh.')}
+   try{pdf=await pj.getDocument({data:await f.arrayBuffer()}).promise}catch(e){return e&&e.name=='PasswordException'?fail('PF-202','Encrypted Document','The PDF is password protected.'):fail('PF-201','Corrupt Document','The PDF could not be opened. It may be damaged or not a real PDF.')}
+   if(!pdf.numPages)return fail('PF-205','Empty Document','The PDF has no pages.');N=Math.min(pdf.numPages,30);if(pdf.numPages>N)warn.push(`Only the first ${N} of ${pdf.numPages} pages were processed in browser mode.`)}
+  det(0,ext=='pdf'?`PDF · ${N} page${N>1?'s':''}`:ext.toUpperCase()+' image');go(1,'');
+  for(let n=1;n<=N;n++){let c=document.createElement('canvas'),its=[],chars=0,W,H;
+   if(pdf){const p=await pdf.getPage(n),vp=p.getViewport({scale:2});c.width=Math.round(vp.width);c.height=Math.round(vp.height);await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    its=(await p.getTextContent()).items.map(it=>{const t=pj.Util.transform(vp.transform,it.transform);return{s:it.str,x:t[4],y:t[5],h:Math.hypot(t[2],t[3]),w:it.width*vp.scale}});chars=its.reduce((a,i)=>a+i.s.trim().length,0)}
+   else{const url=URL.createObjectURL(f),im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no();i.src=url}).catch(()=>null);if(!im)return fail('PF-201','Corrupt Document','The image could not be decoded.');const k=Math.min(1,1700/Math.max(im.width,im.height));c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height)}
+   W=c.width;H=c.height;LI[n]=c.toDataURL('image/jpeg',.8);const text=chars>=30,tb=text?pdfBlocks(its,W,H):[],boxes=tb.map(b=>b.bbox);let regions=[];
+   try{regions=inkRegions(c.getContext('2d').getImageData(0,0,W,H).data,W,H,boxes)}catch(e){}
+   const need=!text||regions.length>0,blob=need?await new Promise(r=>c.toBlob(r,'image/jpeg',.85)):null;
+   pg.push({n,W,H,text,tb,regions,need,blob,norm:nrm(its.map(i=>i.s).join('')),kind:text?'digital':ext=='pdf'?'scanned / image-only':'image (no text layer)',blocks:[]});go(1,`page ${n}/${N}`)}
+  det(1,`${N} pages · ${pg.filter(p=>p.need).length} with visual/handwritten/table regions`);go(2,'');
+  const sm=pg.some(p=>p.need)?await getSample():null,lim=sm?await sm.limits().catch(()=>null):null,canV=!!(sm&&lim&&lim.images),maxV=10;
+  const order=pg.filter(p=>p.need).sort((a,b)=>(a.text-b.text)||b.regions.length-a.regions.length).slice(0,maxV),vset=new Set(canV?order.map(p=>p.n):[]);
+  if(pg.some(p=>p.need)&&!canV)warn.push('Vision (Claude) was unavailable or not enabled in this viewer: tables, hand-drawn diagrams and handwriting were detected as regions and preserved, but NOT interpreted.');
+  else if(pg.filter(p=>p.need).length>maxV)warn.push(`Vision is limited to ${maxV} pages per document; ${pg.filter(p=>p.need).length-maxV} other pages with visual regions were preserved and flagged.`);
+  det(2,`local ${pg.filter(p=>!p.need).length} · vision ${vset.size} · flagged ${pg.filter(p=>p.need&&!vset.has(p.n)).length}`);go(3,'');
+  let used=0,stop=false,okV=0;
+  for(const p of pg){p.blocks=p.tb.map(b=>({block_id:'',type:b.type,content:b.content,page:p.n,bbox:b.bbox,reading_order:0,confidence:.99,confidence_type:'native text layer',extractor:'digital_text_parser',verification:'verified',relationships:[],warnings:[],evidence:'text-layer'}));
+   let vb=null;
+   if(vset.has(p.n)&&!stop){used++;det(3,`vision (Claude) page ${used}/${vset.size} — can take up to a minute`);
+    try{const j=await sm.json(vprompt(!p.text),{images:[p.blob],modelTier:'default'}),items=Array.isArray(j)?j:Array.isArray(j&&j.items)?j.items:null;if(!items)throw{code:'bad_json'};vb=vItems(items,p.n,p.W,p.H);vb.forEach(b=>verifyV(b,p.text?p.norm:null));okV++;
+     if(!vb.length&&!p.text){vb=[regionBlock(p.n,[0,0,p.W,p.H],'Vision returned no readable regions for this scanned page.')]}}
+    catch(e){const code=e&&e.code||'error';if(code=='not_granted'||code=='rate_limited'){stop=true;warn.push(code=='not_granted'?'Vision (Claude) access was declined — remaining visual regions were preserved and flagged.':'Vision rate limit reached — remaining visual regions were preserved and flagged.')}else warn.push(`Page ${p.n}: vision extraction failed (${code}); regions preserved and flagged.`)}}
+   if(vb){for(const v of vb){if(['table','diagram','chart','figure','unknown','equation','handwritten_text','handwritten_code'].includes(v.type)){const ab=p.blocks.filter(b=>b.extractor=='digital_text_parser'&&ovf(b.bbox,v.bbox)>=.6);if(ab.length){if(v.type!='table')v.ocr_text=ab.map(b=>b.content).join('\n');p.blocks=p.blocks.filter(b=>!ab.includes(b))}}}p.blocks.push(...vb)}
+   else if(p.need){const why=canV&&!stop?'Not sent to vision (page limit).':'Vision (Claude) unavailable — preserved and flagged, not interpreted.';(p.regions.length?p.regions.slice(0,8).map(r=>regionBlock(p.n,r,why)):[regionBlock(p.n,[0,0,p.W,p.H],why)]).forEach(b=>p.blocks.push(b))}}
+  det(3,`${pg.reduce((a,p)=>a+p.blocks.length,0)} blocks`);go(4,'');
+  const pages=[],blocks=[];
+  for(const p of pg){const o=orderBlocks(p.blocks,p.W),ctr={};o.order.forEach((b,k)=>{b.reading_order=k+1;const pre=PRE[b.type]||(b.extractor=='digital_text_parser'?'txt':'hand');ctr[pre]=(ctr[pre]||0)+1;b.block_id=`${pre}_${p.n}_${String(ctr[pre]).padStart(2,'0')}`;blocks.push(b)});
+   const tg=o.order.filter(b=>['table','chart','diagram','figure'].includes(b.type));for(const cp of o.order.filter(b=>b.type=='caption')){const nr=tg.map(t=>[Math.min(Math.abs(t.bbox[1]-cp.bbox[3]),Math.abs(cp.bbox[1]-t.bbox[3])),t]).sort((a,b)=>a[0]-b[0])[0];if(nr&&nr[0]<200){cp.relationships.push('caption_of:'+nr[1].block_id);nr[1].relationships.push('caption:'+cp.block_id)}}
+   const nv=o.order.filter(b=>b.extractor.startsWith('vision')||b.extractor=='math_vision'||b.extractor=='fallback').length;
+   pages.push({n:p.n,kind:p.kind+(p.need&&vset.has(p.n)?' + vision':''),width:p.W,height:p.H,flags:{text_layer:p.text,scanned:!p.text,multi_column:o.cols||undefined,tables:o.order.filter(b=>b.type=='table').length,figures:o.order.filter(b=>['figure','diagram','chart'].includes(b.type)).length,visual_regions:nv||undefined},chars:0})}
+  det(4,`${blocks.length} blocks ordered`);go(5,'');
+  const fl=blocks.filter(b=>b.verification!='verified').length;det(5,`${blocks.length-fl} verified · ${fl} flagged`);go(6,'');
+  if(!blocks.length)warn.push('No content could be extracted from this document.');
+  warn.unshift('Processed in your browser: text via pdf.js'+(okV?`, tables / handwriting / diagrams via Claude vision on ${okV} page${okV>1?'s':''} (self-reported confidence — not independently verified).`:'. Tables, handwriting and diagrams need vision or the ParseFlow server.'));
+  const vis=['chart','figure','diagram','equation','handwritten_text','handwritten_code','unknown'];
+  DOC={document_id:'local_'+Date.now(),filename:f.name,format:ext,real:true,local:true,pages,blocks,warnings:warn,processing_status:'complete',router:blocks.map(b=>({block_id:b.block_id,region_type:b.type,extractor:b.extractor})),
+   stats:{pages:pages.length,blocks:blocks.length,tables:blocks.filter(b=>b.type=='table').length,visuals:blocks.filter(b=>vis.includes(b.type)).length,verified:blocks.length-fl,flagged:fl,lanes:{local:pg.filter(p=>!p.need).length,ocr:0,vision:okV,flagged:blocks.filter(b=>b.extractor=='fallback').length}},engines:{ocr:null,vision:{configured:canV&&okV>0,provider:'Claude (artifact sample)'}}};
+  det(6,'Markdown + JSON ready');drawStages(st.map(x=>({...x,state:'done'})));setTimeout(open,500)}
+ catch(e){fail('PF-500','Processing Error','Browser-mode processing failed ('+(e&&(e.name||e.code)||'error')+'). Try again, use the demo, or run the full server.')}}
+const FMTS='pdf,docx,doc,odt,rtf,pptx,ppt,odp,xlsx,xlsm,xls,ods,csv,tsv,png,jpg,jpeg,tif,tiff,bmp,gif,webp,heic,txt,md,html,htm,epub,xps,json,markdown,xhtml,jfif,xltx,docm,pptm,ppsx,dotx,potx,oxps,fb2,mobi,cbz,svg'.split(',');
+function onFile(f){if(!f)return;$('uerr').innerHTML='';$('wserr').innerHTML='';const ext=(f.name.split('.').pop()||'').toLowerCase(),sz=f.size>1048576?(f.size/1048576).toFixed(1)+' MB':(f.size/1024|0)+' KB';
+if(!FMTS.includes(ext))return fail('PF-204','Unsupported Document','ParseFlow could not process this file type. Supported: PDF, Word, PowerPoint, Excel/CSV, images (PNG, JPG, TIFF, BMP, GIF, WebP), text, Markdown, HTML, EPUB.');
+if(!f.size)return fail('PF-205','Empty Document','The file contains no data.');
+{const lim=BE?BE.max_upload_mb:50;if(lim&&f.size>lim*1048576)return fail('PF-206','File Too Large','Maximum size is '+lim+' MB.');}
+if(ext=='json'){f.text().then(t=>{try{const d=JSON.parse(t);if(!Array.isArray(d.blocks)||!Array.isArray(d.pages))throw 0;d.blocks.forEach(b=>{if(!b.block_id||!Array.isArray(b.bbox)||!b.page)throw 0});d.demo=false;d.real=!!d.real;DOC=d;run(f.name,['Digital Twin JSON',sz,d.pages.length+' pages'])}catch(e){fail('PF-203','Invalid Digital Twin','File is not a valid ParseFlow document (needs pages[] and blocks[] with block_id, page, bbox).')}});return}
+if(!BE){if(!['pdf','png','jpg','jpeg'].includes(ext))return fail('PF-209','Server Needed','Word, PowerPoint, Excel and other formats are converted by the ParseFlow server. Start it with ./run.sh (in-browser mode reads PDF and images only).');return localProcess(f,ext,sz)}
+upload(f,ext,sz)}
+const dzs=()=>[$('drop'),$('wsdrop')].filter(Boolean);['dragover','dragenter'].forEach(e=>document.addEventListener(e,x=>{x.preventDefault();dzs().forEach(d=>d.classList.add('hv'))}));['dragleave','drop'].forEach(e=>document.addEventListener(e,x=>{x.preventDefault();dzs().forEach(d=>d.classList.remove('hv'));if(e=='drop')onFile(x.dataTransfer.files[0])}));
+/* ---------------- landing: feature banner, ticker, sections (v2.1) ---------------- */
+const L=(w,h)=>`<div class="ln" style="width:${w||100}%${h?';height:'+h+'px':''}"></div>`,Ls=(n,ws)=>Array.from({length:n},(_,i)=>L(ws?ws[i%ws.length]:[100,96,92,98,88][i%5])).join('');
+const HL=(x,y,w,h,c,tag,tc,tx,ty)=>`<div class="hl ${c||''}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></div>`+(tag?`<div class="hl-tag ${tc||''}" style="left:${tx??x}%;top:calc(${ty??y}% - 17px)">${tag}</div>`:'');
+const JS=o=>esc(JSON.stringify(o).replace(/,(?=")/g,', ').replace(/":/g,'": ')).replace(/("(?:[^"\\]|\\.)*")(\s*:)?|\b(-?\d+\.?\d*)\b/g,(m,a,c,n)=>a?(c?`<span class="js-k">${a}</span>${c}`:`<span class="js-s">${a}</span>`):`<span class="js-n">${n}</span>`);
+const SLIDES=[
+ {k:'Text & columns',f:'research_paper.pdf · page 3',t:'Columns read in the right order',d:'Two-column pages, sidebars and drop caps come out as a person reads them — not line by line across the gutter.',
+  p:()=>L(62,9)+`<div class="bn-cols"><div>${Ls(13)}</div><div>${Ls(13,[100,94,97,90])}</div></div>`+HL(5,13,44,80,'sel','① left column')+HL(51,13,44,80,'','② right column','g',51),
+  o:()=>`<div class="bn-k">Markdown · reading order</div><pre>## 3 Method
+
+The left column is read to the end first,
+then the right column continues the text…
+
+<span class="js-k">&lt;!-- block txt_3_04 · p3 · reading order 4 --&gt;</span></pre><div class="bn-k">Detected</div><span class="bn-chip"><b>2</b> columns</span><span class="bn-chip">gutter at <b>49%</b></span><span class="bn-chip">hyphenation <b>repaired</b></span>`},
+ {k:'Headers/footers',f:'journal_article.pdf · page 12',t:'Running headers set aside',d:'Journal names, page numbers and download stamps are recognised across pages — kept in the JSON, left out of the Markdown.',
+  p:()=>`<div style="font:9px sans-serif;color:#777;display:flex;justify-content:space-between"><span>Journal of Applied Things · Vol. 4</span><span>2025</span></div><div style="height:14px"></div>`+L(70,9)+Ls(14)+`<div style="position:absolute;bottom:14px;left:0;right:0;text-align:center;font:9px sans-serif;color:#777">— 12 —</div>`+HL(3,2,94,7,'w','header','w',3,14)+HL(42,90,16,7,'w','page number','w',38,90),
+  o:()=>`<div class="bn-k">Why they were set aside</div><div class="bn-step"><i>●</i><span><b>“Journal of Applied Things · Vol. 4”</b> — top band · repeats on 23 pages · journal pattern</span></div><div class="bn-step"><i>●</i><span><b>“— 12 —”</b> — bottom edge · page-number pattern</span></div><div class="bn-k">Kept in the JSON</div><pre>${JS({block_id:'hdr_12_01',role:'header',furniture:{score:2.05,excluded:true}})}</pre><div class="bn-d" style="margin-top:8px">One click (“include running headers”) puts them back in the Markdown.</div>`},
+ {k:'Tables',f:'annual_report.pdf · page 1',t:'Tables keep their structure',d:'Merged header cells become real colspan — nothing is flattened or invented.',
+  p:()=>L(70,9)+Ls(3)+`<div class="bn-tbl"><div class="h"><span></span><span style="grid-column:span 2"></span><span></span></div><div class="h"><span style="opacity:0"></span><span></span><span></span><span></span></div>${'<div><span></span><span></span><span></span><span></span></div>'.repeat(4)}</div>`+Ls(4)+HL(4,24,92,30,'sel','table · 94%'),
+  o:()=>`<div class="bn-k">Extracted table <span class="pill verified">Verified · ruled grid</span></div><table class="t"><tr><th>Region</th><th colspan="2" style="text-align:center">Revenue ($M)</th><th>Δ</th></tr><tr><th></th><th>FY23</th><th>FY24</th><th></th></tr><tr><td>Americas</td><td>18.0</td><td>19.1</td><td>+6%</td></tr><tr><td>Europe</td><td>11.2</td><td>11.2</td><td>0%</td></tr><tr><td>APAC</td><td>14.4</td><td>17.9</td><td>+24%</td></tr></table><div class="bn-k">Evidence</div><pre>${JS({block_id:'tbl_1_01',page:1,bbox:[40,200,560,330],extractor:'table_engine'})}</pre>`},
+ {k:'Equations',f:'physics_notes.pdf · page 7',t:'Equations become LaTeX',d:'Rebuilt from the glyphs in the PDF — fractions, roots, limits, sub- and superscripts — and shown as real maths.',
+  p:()=>L(60,9)+Ls(4)+`<div style="text-align:center;margin:16px 0;font:italic 19px 'Times New Roman',serif;color:#111">∂<b>B</b>/∂t = −∇ × <b>E</b></div>`+Ls(3)+`<div style="text-align:center;margin:14px 0;font:italic 17px 'Times New Roman',serif;color:#111">∫ Ψ*Ψ dv = 1</div>`+Ls(3)+HL(16,24,68,11,'sel','equation · 97%'),
+  o:()=>`<div class="bn-k">Rendered</div><div class="amr" style="font-size:17px">\\[\\frac{\\partial \\mathbf{B}}{\\partial t} = -\\nabla \\times \\mathbf{E}\\]</div><div class="bn-k">LaTeX</div><pre>\\frac{\\partial \\mathbf{B}}{\\partial t} = -\\nabla \\times \\mathbf{E}</pre><div class="bn-d" style="margin-top:8px">Inline maths stays inline: \\(\\int \\Psi^{*}\\Psi \\, dv = 1\\)</div>`},
+ {k:'Scans & OCR',f:'letter_1864.pdf · scanned',t:'Old scans, read adaptively',d:'ParseFlow measures each scan — contrast, skew, speckle, text size — and only applies the clean-up steps the page needs.',
+  p:()=>`<div class="bn-scan" style="position:absolute;inset:16px;padding:16px;border-radius:2px">`+L(55,9)+Ls(15,[96,90,99,84,93])+`</div>`+HL(6,14,88,46,'sel','ocr · 91%'),
+  o:()=>`<div class="bn-k">Measured on this page</div><span class="bn-chip">contrast <b>low</b></span><span class="bn-chip">skew <b>1.8°</b></span><span class="bn-chip">speckle <b>medium</b></span><div class="bn-k">Applied</div><div class="bn-step"><i>✓</i><b>Contrast stretch</b></div><div class="bn-step"><i>✓</i><b>Deskew</b> by measured angle</div><div class="bn-step"><i>✓</i><b>Sauvola binarisation</b> for uneven paper</div><div class="bn-step"><i>✓</i>Kept the better of two attempts (Tesseract confidence)</div><div class="bn-d" style="margin-top:8px">Pages with a usable text layer skip OCR entirely.</div>`},
+ {k:'Ask',f:'deBroglie_wavefunction.pdf',t:'Ask your document',d:'Answers are copied from the extracted blocks — with the maths rendered and a View Source link to the exact region.',
+  p:()=>`<div style="text-align:center;font:600 13px sans-serif;color:#c00;margin-bottom:8px">Normalization of Wavefunction</div>`+Ls(6)+`<div style="height:20px"></div>`+Ls(2)+`<div style="margin-top:14px;font:italic 10.5px 'Times New Roman',serif;color:#111;white-space:nowrap">∫ Ψ*Ψ dv = 1,&nbsp; 1/√N is called normalization factor.</div>`+Ls(3)+HL(3,46,94,7,'sel','evidence · p13'),
+  o:()=>`<div class="bn-q">What is the normalization factor?</div><div class="bn-a">\\(\\int \\Psi^{*}\\Psi \\, dv = 1\\), \\(1/\\sqrt{N}\\) is called normalization factor.</div><div class="bn-k">Evidence</div><div class="flow"><span class="mono">p13 · txt_13_07</span><button class="btn sm" tabindex="-1">View Source</button></div><div class="bn-k">How</div><span class="bn-chip">section · passage · table cell</span><span class="bn-chip"><b>no model</b> — nothing generated</span>`},
+ {k:'Flags, not guesses',f:'lab_whiteboard.jpg',t:'Flags instead of guesses',d:'When handwriting is unreadable, ParseFlow keeps the image region and marks it for review rather than inventing text.',
+  p:()=>`<div class="bn-hand" style="margin-top:22px">AVL Tree — Deletion</div><div class="bn-hand" style="font-size:18px;margin-top:10px">BF = h(L) − h(R)</div><div class="bn-hand" style="font-size:17px;margin-top:40px;opacity:.6;filter:blur(1.2px)">if lft rot thn ckk paremt bf…</div><div class="bn-hand" style="font-size:18px;margin-top:40px">|BF| &gt; 1 ⇒ rebalance</div>`+HL(3,9,80,10,'','verified','g')+HL(3,37,94,10,'e','flagged · 41%','e'),
+  o:()=>`<div class="bn-k">Region hand_2_03 <span class="pill failed">Flagged</span></div><div class="warn">Low confidence — content withheld rather than guessed. The image region is preserved; open View Source to read it yourself.</div><pre>${JS({block_id:'hand_2_03',content:null,confidence:0.41,verification:'failed',preserved_image:true})}</pre>`}
+];
+let BN=0,BNT=null,BNP=false;const BN_MS=5500;
+function bnRender(){const s=SLIDES[BN];$('bnSlide').innerHTML=`<div class="bn-doc"><div class="bn-paper">${s.p()}</div></div><div class="bn-out"><h3>${s.t}</h3><div class="bn-d">${s.d}</div>${s.o()}</div>`;
+ $('bnCount').textContent=`Slide ${BN+1} of ${SLIDES.length} — ${s.k}`;$('bnFile').textContent=s.f+' · sample';
+ $('bnDots').innerHTML=SLIDES.map((x,i)=>`<button class="${i<BN?'done':i==BN?'on':''}" onclick="bnGo(${i})" aria-label="${esc(x.k)}"></button>`).join('');
+ const nx=SLIDES[(BN+1)%SLIDES.length];$('bnLabels').innerHTML=`<b>${esc(s.k)}</b> · next: <span onclick="bnGo(${(BN+1)%SLIDES.length})">${esc(nx.k)}</span>`;
+ if(/\\\(|\\\[/.test($('bnSlide').textContent))mathIn($('bnSlide'))}
+function bnGo(i){BN=(i+SLIDES.length)%SLIDES.length;bnRender();bnArm()}
+function bnArm(){clearTimeout(BNT);if(!BNP&&$('landing').classList.contains('on'))BNT=setTimeout(()=>bnGo(BN+1),BN_MS)}
+function bnPause(p){BNP=p;$('banner').classList.toggle('paused',p);if(p)clearTimeout(BNT);else{bnArm()}}
+document.documentElement.style.setProperty('--bnt',BN_MS/1000+'s');
+const TICK=['<b>Column-aware</b> reading order','<b>Running headers</b> removed, kept in JSON','<b>LaTeX</b> from PDF maths','<b>Merged cells</b> → HTML tables','<b>Adaptive OCR</b> for old scans','<b>Evidence</b> on every block','<b>Ask</b> with View Source','<b>400-page</b> reports','<b>Offline</b> · no API key needed','<b>Markdown + JSON</b> export'];
+const HOW=[['DETECT','file type, pages, text layer'],['ANALYZE','regions, columns, tables, maths'],['ROUTE','best extractor per page'],['EXTRACT','text · tables · LaTeX · OCR'],['ASSEMBLE','reading order, headers set aside'],['VERIFY','independent evidence per block'],['OUTPUT','Markdown + Digital Twin JSON']];
+function lpInit(){$('lpTrack').innerHTML=(TICK.map(t=>`<span>${t}</span>`).join('')).repeat(2);
+ $('lpPipe').innerHTML=HOW.map((h,i)=>`<div class="s" style="animation-delay:${i*1.5}s"><b>${h[0]}</b><small>${h[1]}</small></div>`).join('');bnRender();bnArm();lpAuth()}
+function lpGo(e,id){e.preventDefault();const t=$(id);if(t)t.scrollIntoView({behavior:'smooth',block:'start'})}
+function lpTop(e){e.preventDefault();$('landing').scrollTo({top:0,behavior:'smooth'})}
+const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+const LIMTXT=()=>!BE?'':(BE.max_upload_mb?`up to ${BE.max_upload_mb} MB`:'any file size')+' · '+(BE.max_pages?`${BE.max_pages} pages`:'any number of pages');
+function lpAuth(){const lim=BE?'· '+LIMTXT():'';$('lpLim').textContent=lim;
+ if(ME){$('navAuth').innerHTML=`<button class="btn" onclick="goWs()">My documents</button><button class="av" title="${esc(ME.name)} · ${esc(ME.email)}" onclick="goWs('settings')" style="border:0">${esc(initials(ME.name))}</button>`;
+  $('lpOpts').innerHTML=`<div class="lp-opt on" style="grid-column:span 2"><b>✓ Saving to your library</b>Logged in as ${esc(ME.name)} — uploads are kept in My documents until you delete them.</div>`;
+  $('lpDropBtns').innerHTML=`<button class="btn go" onclick="fi.click()">Upload to my library</button><button class="btn" onclick="goWs()">Open my documents</button>`}
+ else{$('navAuth').innerHTML=`<button class="btn ghost" onclick="openAuth('login')">Log in</button><button class="btn pri" onclick="openAuth('signup')">Sign up</button>`;
+  $('lpOpts').innerHTML=`<button class="lp-opt on" onclick="fi.click()"><b>✓ Continue without account</b>Process now · results are <u>not saved</u> after you leave</button><button class="lp-opt" onclick="openAuth('login','upload')"><b>🔒 Log in to save</b>Keep every upload in your library and reopen it anytime</button>`;
+  $('lpDropBtns').innerHTML=`<button class="btn go" onclick="fi.click()">Process without saving</button><button class="btn" onclick="openAuth('login','upload')">🔒 Log in to save to your library</button>`}
+ $('lpNote').textContent=(BE?LIMTXT().replace(/^./,c=>c.toUpperCase())+' · ':'')+(ME?'Saved to your library on this ParseFlow server.':'Processed on this ParseFlow server · guest uploads are deleted after 24 hours.')}
+
+/* ---------------- accounts ---------------- */
+let ME=null,PEND=null,AUTHM='login';
+const api=(u,o={})=>fetch(u,{credentials:'same-origin',...o,headers:{'Content-Type':'application/json',...(o.headers||{})}}).then(async r=>{let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.error)throw new Error((j.error&&j.error.message)||('Request failed ('+r.status+')'));return j});
+function refreshMe(){return fetch('/api/auth/me',{credentials:'same-origin'}).then(r=>r.json()).then(j=>{ME=j.user||null}).catch(()=>{ME=null})}
+function mdOpen(html){$('mdBox').innerHTML=html;$('mdBack').classList.add('on');const f=$('mdBox').querySelector('input');f&&setTimeout(()=>f.focus(),30)}
+function mdClose(){$('mdBack').classList.remove('on');PEND=null}
+document.addEventListener('keydown',e=>{if(e.key=='Escape'&&$('mdBack').classList.contains('on'))mdClose()});
+function openAuth(mode,after){if(!BE)return fail('PF-501','Backend unreachable','Accounts need the ParseFlow server. Start it with ./run.sh.');AUTHM=mode||'login';PEND=after||null;authForm()}
+function authForm(err){const su=AUTHM=='signup';mdOpen(`<h3>${su?'Create your account':'Welcome back'}</h3><p class="sub">${su?'Save every document you upload and reopen it any time.':'Log in to see your saved documents.'}${PEND=='upload'?' After that, pick the file to upload.':''}</p>
+<div class="md-tabs"><button class="${su?'':'on'}" onclick="AUTHM='login';authForm()">Log in</button><button class="${su?'on':''}" onclick="AUTHM='signup';authForm()">Sign up</button></div>
+<form onsubmit="event.preventDefault();authSubmit(this)">${su?'<label class="fld"><span>Name</span><input name="name" autocomplete="name" required maxlength="80"></label>':''}
+<label class="fld"><span>Email</span><input name="email" type="email" autocomplete="email" required></label>
+<label class="fld"><span>Password${su?' (at least 8 characters)':''}</span><input name="password" type="password" autocomplete="${su?'new-password':'current-password'}" required ${su?'minlength="8"':''}></label>
+${err?`<div class="ermsg">${esc(err)}</div>`:''}${su?'':'<p class="sub" style="margin:6px 0 0;font-size:12px"><a href="#" onclick="event.preventDefault();forgotForm(this.closest(\'form\').email.value)">Forgot your password?</a></p>'}<div class="md-acts"><button type="button" class="btn" onclick="mdClose()">Cancel</button><button class="btn go" type="submit">${su?'Create account':'Log in'}</button></div></form>
+<p class="sub" style="margin:14px 0 0;font-size:12px">Accounts live on this ParseFlow server only. Without an account, uploads are processed and then deleted after 24 hours.</p>`)}
+function authSubmit(f){const d=Object.fromEntries(new FormData(f).entries()),b=f.querySelector('button[type=submit]');b.disabled=true;
+ api('/api/auth/'+(AUTHM=='signup'?'signup':'login'),{method:'POST',body:JSON.stringify(d)}).then(j=>{if(j.needs_verification){PEND=null;return mdOpen(`<h3>Check your inbox</h3><p class="sub">We sent a confirmation link to <b>${esc(j.email)}</b>. Open it to finish creating your account, then log in.</p><div class="md-acts"><button class="btn" onclick="api('/api/auth/verify/resend',{method:'POST',body:JSON.stringify({email:'${esc(j.email)}'})}).then(()=>this.textContent='Sent again').catch(e=>this.textContent=e.message)">Send again</button><button class="btn go" onclick="mdClose()">OK</button></div>`)}
+  ME=j.user;const after=PEND;PEND=null;$('mdBack').classList.remove('on');lpAuth();
+  if(after=='upload'){goWs();setTimeout(()=>fi.click(),50)}else goWs()}).catch(e=>{authForm(e.message);const m=$('mdBox').querySelector('[name=email]');if(m)m.value=d.email||'';const n=$('mdBox').querySelector('[name=name]');if(n)n.value=d.name||''})}
+function forgotForm(email,msg){mdOpen(`<h3>Reset your password</h3><p class="sub">Enter the email of your account. We will send a link to choose a new password (valid for one hour).</p>
+<form onsubmit="event.preventDefault();forgotSubmit(this)"><label class="fld"><span>Email</span><input name="email" type="email" autocomplete="email" required value="${esc(email||'')}"></label>${msg?`<div class="ermsg">${esc(msg)}</div>`:''}<div class="md-acts"><button type="button" class="btn" onclick="mdClose()">Cancel</button><button class="btn go" type="submit">Send link</button></div></form>`)}
+function infoDlg(title,text){mdOpen(`<h3>${esc(title)}</h3><p class="sub">${esc(text)}</p><div class="md-acts"><button class="btn go" onclick="mdClose()">OK</button></div>`)}
+function forgotSubmit(f){const e=f.email.value;f.querySelector('button[type=submit]').disabled=true;
+ api('/api/auth/reset/request',{method:'POST',body:JSON.stringify({email:e})}).then(()=>infoDlg('Check your inbox','If an account exists for that address, a reset link is on its way.')).catch(x=>forgotForm(e,x.message))}
+let RESETTOK=null;
+function resetForm(token,msg){RESETTOK=token;mdOpen(`<h3>Choose a new password</h3><p class="sub">This signs you out everywhere else.</p><form onsubmit="event.preventDefault();resetSubmit(this)"><label class="fld"><span>New password (at least 8 characters)</span><input name="password" type="password" autocomplete="new-password" minlength="8" required></label>${msg?`<div class="ermsg">${esc(msg)}</div>`:''}<div class="md-acts"><button type="button" class="btn" onclick="mdClose()">Cancel</button><button class="btn go" type="submit">Save password</button></div></form>`)}
+function resetSubmit(f){api('/api/auth/reset',{method:'POST',body:JSON.stringify({token:RESETTOK,password:f.password.value})}).then(j=>{ME=j.user;mdClose();lpAuth();goWs();infoDlg('Password changed','You are logged in with your new password.')}).catch(x=>resetForm(RESETTOK,x.message))}
+function verifyLink(token){api('/api/auth/verify',{method:'POST',body:JSON.stringify({token})}).then(j=>{ME=j.user;lpAuth();goWs();infoDlg('Email confirmed','Thanks — your address is confirmed.')}).catch(e=>dlg({title:'Could not confirm',text:e.message}))}
+function resendVerify(b){b.disabled=true;api('/api/auth/verify/resend',{method:'POST',body:'{}'}).then(()=>{b.textContent='Link sent — check your inbox'}).catch(e=>{b.textContent=e.message})}
+function hashRoute(){const h=location.hash||'';let m;if(!(m=h.match(/^#(verify|reset|doc)=([A-Za-z0-9_-]+)$/)))return false;history.replaceState(null,'',location.pathname+location.search);
+ if(m[1]=='verify')verifyLink(m[2]);else if(m[1]=='reset')resetForm(m[2]);else fetchDoc(m[2]).then(d=>{DOC=d;open()}).catch(()=>dlg({title:'Document not available',text:'This link is private, was turned off by its owner, or the document has expired.'}));return true}
+window.addEventListener('hashchange',()=>{if(BE)hashRoute()});
+function shareDlg(){if(!DOC||!SRV())return;fetch('/api/document/'+DOC.document_id+'/access',{credentials:'same-origin'}).then(r=>r.json()).then(a=>{if(!a.owner)return dlg({title:'Shared document',text:'You are viewing a document someone shared with you. Only its owner can change who sees it.'});
+ const draw=(sh,link)=>mdOpen(`<h3>Share this document</h3><p class="sub">${sh?'Anyone with the link can open it (read-only). Their questions in Ask are not saved to your conversation.':'Only you can open it'+(a.saved?' (your account).':' (this browser). Guest uploads are deleted after 24 hours.')}</p>
+<label style="display:flex;gap:10px;align-items:center;justify-content:flex-start;margin:4px 0 14px;font-size:14px;cursor:pointer"><input type="checkbox" style="width:auto;margin:0" ${sh?'checked':''} onchange="api('/api/document/${DOC.document_id}/share',{method:'POST',body:JSON.stringify({shared:this.checked})}).then(j=>window._shareDraw(j.shared,j.link))"> <span>Anyone with the link can view</span></label>
+${sh&&link?`<label class="fld"><span>Link</span><input value="${esc(link)}" readonly onclick="this.select()"></label>`:''}<div class="md-acts">${sh&&link?`<button class="btn" onclick="navigator.clipboard.writeText('${esc(link)}');this.textContent='Copied'">Copy link</button>`:''}<button class="btn go" onclick="mdClose()">Done</button></div>`);
+ window._shareDraw=draw;draw(a.shared,a.shared?location.origin+'/#doc='+DOC.document_id:null)}).catch(()=>{})}
+function logout(){fetch('/api/auth/logout',{method:'POST',credentials:'same-origin'}).finally(()=>{ME=null;LIB=[];WSSEL=null;lpAuth();show('landing')})}
+function dlg({title,text='',input=null,ok='OK',danger=false,password=false}){return new Promise(res=>{window._dlg=res;
+ mdOpen(`<h3>${esc(title)}</h3>${text?`<p class="sub">${esc(text)}</p>`:''}<form onsubmit="event.preventDefault();const i=this.querySelector('input');_dlg(i?i.value:true);mdClose()">${input!==null?`<label class="fld"><input ${password?'type="password" autocomplete="current-password"':''} value="${esc(input)}" required></label>`:''}<div class="md-acts"><button type="button" class="btn" onclick="_dlg(false);mdClose()">Cancel</button><button class="btn ${danger?'danger':'go'}" type="submit">${esc(ok)}</button></div></form>`)})}
+
+/* ---------------- workspace ---------------- */
+let LIB=[],LIBU=null,WSV='docs',WSSEL=null,WSF='All',WSQ='',WSPOLL=null;
+const IC={home:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',docs:'<path d="M4 4h6v16H4zM14 4h6v16h-6z"/>',review:'<path d="M12 9v4M12 17h.01M10.3 3.9L2 18a2 2 0 001.7 3h16.6A2 2 0 0022 18L13.7 3.9a2 2 0 00-3.4 0z"/>',run:'<path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/>',set:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>',priv:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>',file:'<path d="M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8z"/><path d="M14 3v5h5"/>'};
+const svgI=k=>`<svg viewBox="0 0 24 24">${IC[k]}</svg>`;
+const FCOL={PDF:'#f2686b',PNG:'#6ea8fe',JPG:'#3ecf8e',JPEG:'#3ecf8e',DOCX:'#4f8bf5',DOC:'#4f8bf5',ODT:'#4f8bf5',RTF:'#4f8bf5',PPTX:'#f08a4b',PPT:'#f08a4b',ODP:'#f08a4b',XLSX:'#2fb36b',XLS:'#2fb36b',XLSM:'#2fb36b',ODS:'#2fb36b',CSV:'#2fb36b',TSV:'#2fb36b',TIF:'#6ea8fe',TIFF:'#6ea8fe',BMP:'#6ea8fe',GIF:'#6ea8fe',WEBP:'#6ea8fe',MD:'#a78bfa',TXT:'#a78bfa',HTML:'#a78bfa',HTM:'#a78bfa',EPUB:'#a78bfa'};
+const fsize=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,b/1024|0)+' KB';
+function ago(t){const s=Date.now()/1000-t;if(s<60)return 'just now';if(s<3600)return (s/60|0)+' min ago';if(s<86400)return (s/3600|0)+' h ago';if(s<172800)return 'yesterday';return new Date(t*1000).toLocaleDateString(undefined,{month:'short',day:'numeric',year:new Date(t*1000).getFullYear()==new Date().getFullYear()?undefined:'numeric'})}
+const needsReview=d=>d.status=='failed'||(d.stats&&d.stats.flagged>0);
+function contentOf(d){const s=d.stats;if(!s)return d.status=='failed'?'—':'…';const p=[];if(s.tables)p.push(s.tables+' table'+(s.tables>1?'s':''));if(s.equations)p.push(s.equations+' equation'+(s.equations>1?'s':''));if(s.scanned)p.push('scanned · OCR');if(s.handwriting)p.push('handwriting');if(s.figures&&p.length<2)p.push(s.figures+' figure'+(s.figures>1?'s':''));return p.length?p.slice(0,3).join(' · '):'text'}
+function statusOf(d){if(d.status=='processing')return `<span class="wpill run">${esc(d.progress||'Processing')}</span>`;if(d.status=='failed')return `<span class="wpill er" title="${esc(d.error||'')}">✕ Failed</span>`;
+ const s=d.stats||{},pct=s.blocks?Math.round(100*s.verified/s.blocks):100;return s.flagged?`<span class="wpill ${pct>=90?'ok':'wn'}" title="${s.flagged} block(s) flagged for review">${pct>=90?'✓':'⚠'} ${pct}% verified</span>`:'<span class="wpill ok">✓ 100% verified</span>'}
+const FILTERS={All:()=>1,PDF:d=>d.type=='PDF',Images:d=>d.type!='PDF','With tables':d=>d.stats&&d.stats.tables>0,'With equations':d=>d.stats&&d.stats.equations>0,Scanned:d=>d.stats&&d.stats.scanned>0,'Needs review':needsReview};
+function goWs(view){if(!ME)return show('landing');WSV=view||'docs';show('ws');capBadge();renderWs();loadLib()}
+function wsNav(v,f){WSV=v;if(f)WSF=f;else if(v=='docs'&&f===undefined)WSF='All';renderWs()}
+function loadLib(){if(!ME)return;clearTimeout(WSPOLL);return fetch('/api/my/documents',{credentials:'same-origin'}).then(r=>{if(r.status==401){ME=null;lpAuth();show('landing');throw 0}return r.json()}).then(j=>{LIB=j.documents||[];LIBU=j.usage;if(WSSEL&&!LIB.some(d=>d.id==WSSEL))WSSEL=null;renderWs();
+ if(LIB.some(d=>d.status=='processing')&&$('ws').classList.contains('on'))WSPOLL=setTimeout(loadLib,2000)}).catch(()=>{})}
+function renderWs(){if(!ME)return;const rv=LIB.filter(needsReview).length,run=LIB.filter(d=>d.status=='processing').length,it=(on,ic,label,cnt,act)=>`<button class="ws-it ${on?'on':''}" onclick="${act}">${svgI(ic)}<span class="nm">${label}</span>${cnt!=null?`<em>${cnt}</em>`:''}</button>`;
+ $('wsNav').innerHTML=it(false,'home','Home',null,"show('landing');lpAuth();bnArm()")+it(WSV=='docs'&&WSF!='Needs review','docs','My documents',LIB.length,"wsNav('docs','All')")+it(WSV=='docs'&&WSF=='Needs review','review','Needs review',rv,"wsNav('docs','Needs review')")+(run?it(false,'run','Processing',run,"wsNav('docs','All')"):'');
+ $('wsRecent').innerHTML=LIB.slice(0,5).map(d=>`<button class="ws-it" onclick="openSaved('${d.id}')" title="${esc(d.filename)}">${svgI('file')}<span class="nm">${esc(d.filename)}</span></button>`).join('')||'<div class="mu" style="font-size:12.5px;padding:4px 10px">Nothing yet</div>';
+ $('wsAcct').innerHTML=it(WSV=='settings','set','Settings',null,"wsNav('settings')")+it(WSV=='privacy','priv','Privacy & data',null,"wsNav('privacy')");
+ $('wsStore').innerHTML=LIBU?`<b>${LIBU.documents}</b> document${LIBU.documents==1?'':'s'} · <b>${LIBU.pages}</b> page${LIBU.pages==1?'':'s'}<br>${fsize(LIBU.bytes||0)} stored on this server`:'';
+ $('wsMe').innerHTML=`<div class="av">${esc(initials(ME.name))}</div><div class="who"><div style="font-weight:600;font-size:13.5px">${esc(ME.name)}</div><div class="mu" style="font-size:12px">${esc(ME.email)}</div></div><span class="lp-sp"></span><button class="btn sm" onclick="logout()">Log out</button>`;
+ renderWsBody()}
+function renderWsBody(){const b=$('wsBody');if(!b)return;if(WSV=='settings')return b.innerHTML=settingsHTML();if(WSV=='privacy')return b.innerHTML=privacyHTML();
+ const q=WSQ.trim().toLowerCase(),L=LIB.filter(FILTERS[WSF]||FILTERS.All).filter(d=>!q||d.filename.toLowerCase().includes(q));
+ if(!WSSEL||!L.some(d=>d.id==WSSEL))WSSEL=L[0]?L[0].id:null;const cur=LIB.find(d=>d.id==WSSEL);
+ const drop=`<div class="ws-drop" id="wsdrop" onclick="fi.click()"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></div><div><b>Drop files to upload</b><div class="mu" style="font-size:12.5px">PDF · Word · PowerPoint · Excel · images · text — saved to your library automatically${BE?' · '+LIMTXT():''}</div></div><span class="lp-sp"></span><button class="btn" onclick="event.stopPropagation();fi.click()">Browse</button></div>`;
+ const rows=L.map(d=>`<tr class="r ${d.id==WSSEL?'sel':''}" onclick="wsSel('${d.id}')" ondblclick="openSaved('${d.id}')"><td class="nm"><div><span class="fic" style="background:${FCOL[d.type]||'#8a919b'}">${esc(d.type||'?')}</span><span title="${esc(d.filename)}">${esc(d.filename)}</span></div></td><td>${d.pages??''}</td><td class="mu hide-s">${esc(contentOf(d))}</td><td>${statusOf(d)}</td><td class="mu hide-s">${ago(d.created)}</td></tr>`).join('');
+ const list=LIB.length?(L.length?`<table class="ws-t"><tr><th>Name</th><th>Pages</th><th class="hide-s">Content</th><th>Status</th><th class="hide-s">Uploaded</th></tr>${rows}</table>`:`<div class="ws-empty">No documents match${q?` “${esc(WSQ)}”`:''} in ${esc(WSF)}.</div>`):`<div class="ws-empty"><b style="color:var(--tx);font-size:15px">Your library is empty</b><p style="margin:6px 0 0">Upload a PDF or image — it is processed, opened in the viewer and kept here so you can come back to it.</p></div>`;
+ b.innerHTML=`<div class="ws-grid"><div><h2 class="ws-h2">${WSF=='Needs review'?'Needs review':'My documents'}</h2><div class="ws-chips">${Object.keys(FILTERS).map(k=>`<button class="${k==WSF?'on':''}" onclick="WSF='${k}';renderWs()">${k}</button>`).join('')}</div>${drop}${list}</div>${cur?panelHTML(cur):'<div></div>'}</div>`}
+function wsSel(id){WSSEL=id;renderWsBody()}
+function panelHTML(d){const s=d.stats||{},pct=s.blocks?Math.round(100*s.verified/s.blocks):null,done=d.status=='complete';
+ return `<div class="ws-panel"><div style="display:flex;align-items:center;gap:8px"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(d.filename)}">${esc(d.filename)}</b><span class="lp-sp"></span>${statusOf(d)}</div>
+<div class="mu" style="font-size:12px;margin:2px 0 10px">${d.pages??'?'} page${d.pages==1?'':'s'} · ${fsize(d.size||0)}${s.seconds!=null?` · processed in ${(+s.seconds).toFixed(1)} s`:''} · ${ago(d.created)}</div>
+<div class="ws-thumb">${done?`<img src="/api/thumb/${d.id}/1.jpg" alt="First page of ${esc(d.filename)}" loading="lazy">`:`<span class="mu" style="font-size:12.5px">${d.status=='failed'?esc(d.error||'Processing failed'):'Processing…'}</span>`}</div>
+${done?`<div class="k">Summary</div><div class="ws-st"><div><b>${s.blocks??0}</b><span>blocks</span></div><div><b>${s.tables??0}</b><span>tables</span></div><div><b>${pct??'—'}${pct!=null?'%':''}</b><span>verified</span></div><div><b>${s.furniture??0}</b><span>headers/footers set aside</span></div></div>`:''}
+<div class="ws-acts">${done?`<button class="btn go" onclick="openSaved('${d.id}')">Open in viewer</button><div class="row2"><button class="btn" onclick="dlSaved('${d.id}','md')">⬇ Markdown</button><button class="btn" onclick="dlSaved('${d.id}','json')">⬇ JSON</button></div>`:d.status=='processing'?`<button class="btn go" onclick="openSaved('${d.id}')">Show progress</button>`:''}
+<div class="row2"><button class="btn" onclick="renameSaved('${d.id}')">Rename</button><button class="btn danger" onclick="deleteSaved('${d.id}')" ${d.status=='processing'?'disabled title="Wait until processing finishes"':''}>Delete</button></div></div></div>`}
+function openSaved(id){const d=LIB.find(x=>x.id==id);if(!d)return;if(d.status=='processing')return track({document_id:id,filename:d.filename,type:d.type,pages:d.pages},fsize(d.size||0));
+ if(d.status=='failed')return dlg({title:'Processing failed',text:d.error||'This document could not be processed.',ok:'OK'});
+ fetchDoc(id).then(doc=>{DOC=doc;DOC.filename=d.filename;open()}).catch(()=>dlg({title:'Could not open the document',text:'The processed result is missing on the server. Delete it and upload the file again.',ok:'OK'}))}
+function dlSaved(id,kind){const d=LIB.find(x=>x.id==id),base=(d?d.filename:'document').replace(/\.[^.]+$/,'');
+ fetch(kind=='md'?`/api/document/${id}/markdown`:`/api/document/${id}`,{credentials:'same-origin'}).then(r=>r.text()).then(t=>dl(base+(kind=='md'?'.md':'.parseflow.json'),t,kind=='md'?'text/markdown':'application/json'))}
+function renameSaved(id){const d=LIB.find(x=>x.id==id);dlg({title:'Rename document',input:d.filename,ok:'Rename'}).then(v=>{if(v===false)return;api('/api/my/documents/'+id,{method:'PATCH',body:JSON.stringify({filename:v})}).then(loadLib).catch(e=>dlg({title:'Could not rename',text:e.message}))})}
+function deleteSaved(id){const d=LIB.find(x=>x.id==id);dlg({title:'Delete this document?',text:`“${d.filename}” and its results will be removed from the server. This cannot be undone.`,ok:'Delete',danger:true}).then(v=>{if(!v)return;api('/api/my/documents/'+id,{method:'DELETE'}).then(()=>{WSSEL=null;loadLib()}).catch(e=>dlg({title:'Could not delete',text:e.message}))})}
+function settingsHTML(){return `<h2 class="ws-h2" style="margin-bottom:16px">Settings</h2>
+<form class="ws-form" onsubmit="event.preventDefault();saveName(this)"><h3>Profile</h3><p>Your name is shown in the sidebar. The email is your login.</p><label class="fld"><span>Name</span><input name="name" value="${esc(ME.name)}" maxlength="80" required></label><label class="fld"><span>Email · ${ME.verified?'<span style="color:var(--ok,#3ecf8e)">confirmed</span>':'<span style="color:#f2b84b">not confirmed yet</span>'}</span><input value="${esc(ME.email)}" disabled></label>${ME.verified?'':'<p style="margin:-4px 0 10px"><button type="button" class="btn sm" onclick="resendVerify(this)">Send the confirmation link again</button></p>'}<button class="btn go">Save</button><span class="okmsg" id="okName"></span><div class="ermsg" id="erName"></div></form>
+<form class="ws-form" onsubmit="event.preventDefault();savePw(this)"><h3>Password</h3><p>Changing it signs you out on other devices.</p><label class="fld"><span>Current password</span><input name="current" type="password" autocomplete="current-password" required></label><label class="fld"><span>New password (at least 8 characters)</span><input name="new" type="password" autocomplete="new-password" minlength="8" required></label><button class="btn go">Change password</button><span class="okmsg" id="okPw"></span><div class="ermsg" id="erPw"></div></form>
+<div class="ws-form" style="border-color:#f2686b55"><h3>Delete account</h3><p>Removes your account and all ${LIB.length} saved document${LIB.length==1?'':'s'} from this server. This cannot be undone.</p><button class="btn danger" onclick="deleteAccount()">Delete my account…</button></div>`}
+function privacyHTML(){return `<h2 class="ws-h2" style="margin-bottom:16px">Privacy &amp; data</h2><div class="ws-form"><h3>Where your files live</h3><p style="margin-bottom:8px">Uploads and results are stored on this ParseFlow server, in its data folder. Documents you upload while logged in stay in your library until you delete them or your account. Uploads made without an account are deleted automatically after 24 hours.</p>
+<h3 style="margin-top:14px">What leaves the server</h3><p style="margin-bottom:8px">Nothing, unless the server owner has configured a vision model: then only handwriting, chart and diagram regions are sent to that provider for reading. Status: <b>${BE&&BE.vision&&BE.vision.configured?'vision model configured ('+esc(BE.vision.provider)+')':'no vision model configured — everything stays local'}</b>.</p>
+<h3 style="margin-top:14px">Your account</h3><p>Passwords are stored as salted scrypt hashes; sessions use an HttpOnly cookie. Delete a document from its panel, or everything from Settings → Delete account.</p></div>`}
+function saveName(f){api('/api/account',{method:'PATCH',body:JSON.stringify({name:f.name.value})}).then(j=>{ME=j.user;renderWs();lpAuth();$('okName').textContent='Saved'}).catch(e=>$('erName').textContent=e.message)}
+function savePw(f){$('erPw').textContent='';api('/api/account/password',{method:'POST',body:JSON.stringify({current:f.current.value,new:f.new.value})}).then(()=>{f.reset();$('okPw').textContent='Password changed'}).catch(e=>$('erPw').textContent=e.message)}
+function deleteAccount(){dlg({title:'Delete your account?',text:`Enter your password to delete your account and all ${LIB.length} saved document(s). This cannot be undone.`,input:'',password:true,ok:'Delete account',danger:true}).then(pw=>{if(pw===false)return;api('/api/account/delete',{method:'POST',body:JSON.stringify({password:pw})}).then(()=>{ME=null;LIB=[];lpAuth();show('landing')}).catch(e=>dlg({title:'Account not deleted',text:e.message}))})}
+function goHome(){tourEnd();if(ME)goWs();else{show('landing');lpAuth();bnArm()}}
+
+lpInit();</script></body></html>

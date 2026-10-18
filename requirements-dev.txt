@@ -1,0 +1,10 @@
+# tests
+pytest>=7.4
+httpx>=0.27
+# official olmOCR-Bench scorer (clone https://github.com/allenai/olmocr and set OLMOCR_PATH / --olmocr)
+fuzzysearch
+rapidfuzz
+tqdm
+beautifulsoup4
+pypdf
+playwright        # then: playwright install chromium   (the scorer renders equations with KaTeX)

@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""ParseFlow CLI launcher (no install needed): ./parseflow input_pdfs/ --output-dir output_markdown/"""
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend"))
+
+if __name__ == "__main__":
+    from cli import main
+    sys.exit(main())

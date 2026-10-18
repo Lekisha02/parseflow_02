@@ -1,0 +1,2 @@
+# only when DATABASE_URL=postgresql://... is used
+psycopg[binary]>=3.1

@@ -1,0 +1,134 @@
+{
+ "started": "2026-10-13T09:42:26.602512+00:00",
+ "candidate": "parseflow",
+ "impl": "current",
+ "legacy_md": null,
+ "bench_dir": "/home/claude/benchwork/sample",
+ "jsonl_files": [
+  "blanks.jsonl",
+  "dataset.jsonl"
+ ],
+ "n_pdfs": 21,
+ "n_tests": 100,
+ "hardware": {
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "logical_cores": 2,
+  "ram_gb": 7.8,
+  "os": "Linux-6.18.44-fc-v114-x86_64-with-glibc2.39",
+  "python": "3.13.16",
+  "pymupdf": "1.28.2",
+  "tesseract": "tesseract 5.3.4"
+ },
+ "config": {},
+ "vision_configured": false,
+ "annotated_markdown": false,
+ "timeout_s": 180,
+ "latency": {
+  "per_page_median": 0.17288920100054384,
+  "per_page_p90": 2.242248096000367,
+  "per_page_p95": 2.4850594879999335,
+  "per_page_max": 6.838592379000147,
+  "per_page_mean": 0.7987726017778792,
+  "documents": 21,
+  "pages": 23,
+  "worker_peak_rss_mb": 421.28515625,
+  "wall_seconds": 19.48,
+  "workers": 2,
+  "throughput_pages_per_s": 1.181,
+  "method": "time inside each worker around the conversion call (excludes process spawn and imports); each document runs in a fresh process (cold caches); outputs written after timing"
+ },
+ "slowest": [
+  {
+   "pdf": "lincoln_letter.pdf",
+   "seconds": 6.839
+  },
+  {
+   "pdf": "blank_book_pg1.pdf",
+   "seconds": 2.485
+  },
+  {
+   "pdf": "buildingnotes.pdf",
+   "seconds": 2.242
+  },
+  {
+   "pdf": "test-graphical-text.pdf",
+   "seconds": 2.014
+  },
+  {
+   "pdf": "openstax_caculus_pg_273.pdf",
+   "seconds": 0.539
+  },
+  {
+   "pdf": "mattsnotes.pdf",
+   "seconds": 0.369
+  },
+  {
+   "pdf": "headers_footers/fff590bed29a2854ac1f874dad5752ede1aa_pg1.pdf",
+   "seconds": 0.352
+  },
+  {
+   "pdf": "headers_footers/ffaac214730d2b8c2ec842e3618ccb9c4259_pg1.pdf",
+   "seconds": 0.266
+  },
+  {
+   "pdf": "discoverworld_crazy_table4.pdf",
+   "seconds": 0.252
+  },
+  {
+   "pdf": "headers_footers/ff4f7dad78081cff727d19ab51c181d4a661_pg1.pdf",
+   "seconds": 0.226
+  }
+ ],
+ "errors": [],
+ "timeouts": 0,
+ "scorer": {
+  "command": "/usr/bin/python3 -m olmocr.bench.benchmark --dir /home/claude/benchwork/sample --candidate parseflow",
+  "exit_code": 0,
+  "overall": 94.6,
+  "ci": 2.4,
+  "per_jsonl": {
+   "baseline": {
+    "score": 100.0,
+    "passed": 20,
+    "tests": 20
+   },
+   "blanks.jsonl": {
+    "score": 100.0,
+    "passed": 1,
+    "tests": 1
+   },
+   "dataset.jsonl": {
+    "score": 83.8,
+    "passed": 83,
+    "tests": 99
+   }
+  },
+  "per_test_type": {
+   "absent": {
+    "score": 100.0,
+    "tests": 24
+   },
+   "baseline": {
+    "score": 100.0,
+    "tests": 21
+   },
+   "math": {
+    "score": 100.0,
+    "tests": 12
+   },
+   "order": {
+    "score": 84.6,
+    "tests": 13
+   },
+   "present": {
+    "score": 53.3,
+    "tests": 30
+   },
+   "table": {
+    "score": 100.0,
+    "tests": 20
+   }
+  },
+  "raw_output": "bench/baselines/sample_v2.scorer.txt"
+ }
+}

@@ -1,0 +1,17 @@
+# systemd unit for a host install (without Docker). Put Caddy or nginx in front for HTTPS (see deploy/Caddyfile:
+# replace 'parseflow:8000' with '127.0.0.1:8000').
+#   sudo cp deploy/parseflow.service /etc/systemd/system/ && sudo systemctl enable --now parseflow
+[Unit]
+Description=ParseFlow document intelligence
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/parseflow/backend
+EnvironmentFile=/opt/parseflow/.env
+Environment=PARSEFLOW_SECURE_COOKIE=1 PARSEFLOW_TRUST_PROXY=1
+ExecStart=/opt/parseflow/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000 --proxy-headers
+Restart=on-failure
+User=parseflow
+
+[Install]
+WantedBy=multi-user.target
