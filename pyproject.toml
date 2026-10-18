@@ -48,4 +48,4 @@ markers = [
 ]
 
 [tool.vercel]
-entrypoint = "backend.app:app"
+entrypoint = "api.index:app"
