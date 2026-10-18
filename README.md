@@ -1,10 +1,31 @@
 # ParseFlow
 
-**ParseFlow** is a document processing system developed by **Team DEADLOCK** for the **DQCL ParseAnything** problem statement (DataQuest 3.0).
+**ParseFlow** is a document-processing system developed by **Team DEADLOCK** for the **DQCL ParseAnything** problem statement at **DataQuest 3.0**.
 
-It reads PDFs and images that mix digital text, tables, scans, handwriting, equations, diagrams and charts, uses the right extractor for each region, and returns a structured **Digital Twin** (JSON) plus **canonical Markdown**, keeping the evidence behind every result: page, bounding box, extractor, confidence, verification status and warnings.
+It reads PDFs, Word, PowerPoint and Excel files, images, text/Markdown/HTML and e-books (see [Input formats](#input-formats-processingformatspy)) that mix digital text, tables, scans, handwriting, equations, diagrams and charts, uses the right extractor for each region, and returns a structured **Digital Twin** (JSON) plus **canonical Markdown**, keeping the evidence behind every result: page, bounding box, extractor, confidence, verification status and warnings.
 
-> **Version 2** (this revision) rebuilt the extraction core for accuracy and speed while keeping the architecture, API and frontend: column-aware layout, running header/footer detection, table structure with merged cells, LaTeX from the PDF text layer, adaptive OCR preprocessing, backend Markdown, a stricter evidence-based verifier, a one-command CLI, a pytest suite and an official olmOCR-Bench harness. See [CHANGES.md](CHANGES.md) and [Benchmark results](#benchmark-results).
+> **Version 2.6** (this revision) accepts every common document type, reads diagram structure from vector drawings *and* from images (trees, graphs, automata, flowcharts, arrays, linked lists, B-trees, ER and UML diagrams), and adds an AI tutor that answers questions about the whole document or about any single block, with page citations and an AI connection test. Measured results and remaining limits are listed below — nothing in this README is claimed without a test or a measurement.
+>
+> **Version 2** rebuilt the extraction core for accuracy and speed while keeping the architecture, API and frontend: column-aware layout, running header/footer detection, table structure with merged cells, LaTeX from the PDF text layer, adaptive OCR preprocessing, backend Markdown, a stricter evidence-based verifier, a one-command CLI, a pytest suite and an official olmOCR-Bench harness. See [CHANGES.md](CHANGES.md) and [Benchmark results](#benchmark-results).
+
+## Contents
+
+- [Problem Statement](#problem-statement)
+- [Our Approach](#our-approach)
+- [Input Formats](#input-formats-processingformatspy)
+- [What Is Extracted and How](#what-is-extracted-and-how)
+- [Ask Assistant and Diagram Understanding](#ask-assistant-processingassistantpy-processingllmpy)
+- [Digital Twin (JSON)](#digital-twin-json)
+- [Installation](#installation)
+- [One-Command CLI](#one-command-cli-offline-no-api-keys)
+- [API](#api-fastapi)
+- [Environment Variables](#environment-variables)
+- [Tests](#tests)
+- [Benchmark Results](#benchmark-official-olmocr-bench-scorer)
+- [Project Structure](#project-structure)
+- [Deployment Notes](#deployment-notes)
+- [Current Limitations](#current-limitations)
+- [Team](#team)
 
 ---
 
@@ -17,13 +38,13 @@ Most extraction systems work on clean digital text, but real documents mix digit
 ## Our Approach
 
 ```text
-Document → Detect → Analyze → Route → Extract → Assemble → Verify → Structured Output (JSON + Markdown)
+Document → Detect → Analyse → Route → Extract → Assemble → Verify → Structured Output (JSON + Markdown)
 ```
 
 | Stage | What happens (v2) |
 |---|---|
 | **Detect** | File type, page count, encryption, size limits. Per page (no rendering): visible text amount, hidden OCR text layer, image coverage, **text-layer quality** (broken font maps and garbage OCR layers are detected). |
-| **Analyze** | Character-level reading of the text layer (font, size, baseline, bbox for every glyph); display equations; ruled and borderless tables; figures; drop caps; split accents. Scanned pages: adaptive OCR. |
+| **Analyse** | Character-level reading of the text layer (font, size, baseline, bbox for every glyph); display equations; ruled and borderless tables; figures; drop caps; split accents. Scanned pages: adaptive OCR. |
 | **Route** | Per page and per region, cheapest suitable method first (table below). |
 | **Extract** | Paragraphs, headings, lists, code, captions, tables (cell model), equations (LaTeX), figures (vision or flagged). |
 | **Assemble** | Column-aware reading order, **document-level header/footer/page-number classification**, block ids, caption links. |
@@ -144,7 +165,7 @@ Measured on *Introduction to Algorithms* figures (vector drawings): the heap (tr
 ### Diagrams that are images (`processing/diagrams_raster.py`)
 Scanned pages, photos, screenshots and pictures inside PDFs get the same structure, read from the pixels: closed outlines and filled discs/boxes (by colour) are nodes, the remaining strokes are edges (crossing lines are split into the straight pieces ink covers), extra ink where a line meets a node is an arrowhead, an empty lobe on a node is a self-loop, two concentric outlines are an accepting state, a diagonal stroke in a box is NIL, and when no shapes are drawn the words joined by lines are the nodes (recursion trees). The text inside each node is OCR'd crop by crop. The block is `raster_diagram`, `review`, with an *estimated* confidence. When a vision model is configured, its own list of nodes and edges is kept next to it and compared edge by edge (`agreement`: "k of n edges in the model's reading are also in the image geometry").
 
-Measured on all 153 vector figures of *Introduction to Algorithms*, rendered to 150-dpi images and read back without the PDF's drawing commands (`tools/eval_raster_diagrams.py`; the vector reading is the reference):
+Measured on the vector-figure evaluation set from *Introduction to Algorithms*, rendered to 150-dpi images and read back without the PDF's drawing commands (`tools/eval_raster_diagrams.py`; the vector reading is the reference):
 
 | 154 figures | node labels found | edges found (recall) | edges correct (precision) | direction right (of edges found) |
 |---|---|---|---|---|
@@ -371,7 +392,7 @@ The scorer command that is run is exactly: `python -m olmocr.bench.benchmark --d
 
 ### Benchmark results
 
-**Only the official scorer's bundled sample (21 PDFs, 100 tests) could be run in the build environment**: Hugging Face (and therefore the 1,403-PDF dataset) was not reachable. The sample is also the set this version was developed against, so these are **in-sample numbers, not a held-out or full-benchmark score**. The full run has to be done with the commands above.
+**Only the official scorer's bundled sample (21 PDFs; 99 tests in `dataset.jsonl`) could be run in the build environment**: Hugging Face (and therefore the 1,403-PDF dataset) was not reachable. The sample is also the set this version was developed against, so these are **in-sample numbers, not a held-out or full-benchmark score**. The full run has to be done with the commands above.
 
 Hardware: Intel Xeon @ 2.80 GHz, 2 logical cores, 7.8 GB RAM, Linux; PyMuPDF 1.28.2, Tesseract 5.3.4; 2 workers; vision off; no math model; Python `rapidfuzz` implementation in the scorer. Latency = time inside each worker around the conversion call (imports and process spawn excluded, cold caches, one fresh process per document), identical method for v1 and v2.
 
