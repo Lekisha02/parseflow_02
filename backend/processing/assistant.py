@@ -378,7 +378,7 @@ def _lsa(ix, k=96):
     """Latent semantic analysis of the document's own chunks (TF-IDF + truncated SVD). Lets a question find a
     passage that says the same thing in other words. No model, no download; skipped for very short documents."""
     n = len(ix.chunks)
-    if n < 30:
+    if n < 30 or n > 1500:
         return None
     try:
         import numpy as np

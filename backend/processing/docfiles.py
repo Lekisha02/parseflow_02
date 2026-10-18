@@ -35,24 +35,42 @@ def _atomic(path, data, mode="wb"):
 
 
 def write_variants(folder, doc=None):
-    """Write the compressed, lite and per-page files. Safe to call again (atomic replace)."""
+    """Write the compressed, lite and per-page files via streaming (safe on 512MB RAM)."""
     p = os.path.join(folder, "document.json")
     if doc is None:
         with open(p, encoding="utf-8") as f:
             doc = json.load(f)
-    with open(p, "rb") as f:
-        raw = f.read()
-    _atomic(os.path.join(folder, "document.json.gz"), gzip.compress(raw, 6))
-    _atomic(os.path.join(folder, "document.lite.json.gz"), gzip.compress(json.dumps(lite(doc), ensure_ascii=True).encode(), 6))
-    idx, parts, off = {}, [], 0
-    for b in sorted(doc.get("blocks", []), key=lambda b: (b.get("page", 0), b.get("reading_order", 0))):
-        line = (json.dumps(b, ensure_ascii=True) + "\n").encode()
-        pg = str(b.get("page", 0))
-        if pg not in idx:
-            idx[pg] = [off, 0]
-        idx[pg][1] += len(line)
-        parts.append(line); off += len(line)
-    _atomic(os.path.join(folder, "blocks.jsonl"), b"".join(parts))
+
+    # 1. Stream document.json.gz in 64KB chunks (uses 64KB RAM instead of buffering the whole file)
+    gz_path = os.path.join(folder, "document.json.gz")
+    tmp_gz = gz_path + ".tmp"
+    with open(p, "rb") as f_in, gzip.open(tmp_gz, "wb", compresslevel=6) as f_out:
+        while chunk := f_in.read(65536):
+            f_out.write(chunk)
+    os.replace(tmp_gz, gz_path)
+
+    # 2. Stream document.lite.json.gz directly to gzip (avoids large in-memory string buffer)
+    lite_path = os.path.join(folder, "document.lite.json.gz")
+    tmp_lite = lite_path + ".tmp"
+    with gzip.open(tmp_lite, "wt", encoding="utf-8", compresslevel=6) as f_out:
+        json.dump(lite(doc), f_out, ensure_ascii=True)
+    os.replace(tmp_lite, lite_path)
+
+    # 3. Stream blocks.jsonl line-by-line (avoids joining tens of thousands of strings in RAM)
+    jsonl_path = os.path.join(folder, "blocks.jsonl")
+    tmp_jsonl = jsonl_path + ".tmp"
+    idx, off = {}, 0
+    with open(tmp_jsonl, "wb") as f_out:
+        for b in sorted(doc.get("blocks", []), key=lambda b: (b.get("page", 0), b.get("reading_order", 0))):
+            line = (json.dumps(b, ensure_ascii=True) + "\n").encode()
+            pg = str(b.get("page", 0))
+            if pg not in idx:
+                idx[pg] = [off, 0]
+            idx[pg][1] += len(line)
+            f_out.write(line)
+            off += len(line)
+    os.replace(tmp_jsonl, jsonl_path)
+
     _atomic(os.path.join(folder, "blocks.idx.json"), json.dumps(idx).encode())
     _atomic(os.path.join(folder, "document.md"), (doc.get("markdown") or "").encode("utf-8"))
     return True
