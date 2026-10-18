@@ -50,7 +50,9 @@ try:
             p.mkdir(parents=True, exist_ok=True)
             return p
     ON_RENDER = bool(os.getenv("RENDER") or os.getenv("IS_RENDER"))
-    if ON_RENDER:
+    ON_RAILWAY = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID") or os.getenv("RAILWAY_SERVICE_ID"))
+    ON_CLOUD = ON_RENDER or ON_RAILWAY
+    if ON_CLOUD:
         if "MALLOC_ARENA_MAX" not in os.environ:
             os.environ["MALLOC_ARENA_MAX"] = "2"
         if "OCR_MAX_ZOOM" not in os.environ:
@@ -70,12 +72,12 @@ try:
         if "MAX_VISION_REGIONS" not in os.environ:
             os.environ["MAX_VISION_REGIONS"] = "25"
     DATA = _init_data()
-    MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "100" if ON_RENDER else "0") or 0)*1024*1024)        # 0 = no limit
-    ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "0" if ON_RENDER else "1").lower() not in ("0", "false", "no", "off")   # in-process on Render
+    MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "100" if ON_CLOUD else "0") or 0)*1024*1024)        # 0 = no limit
+    ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "0" if ON_CLOUD else "1").lower() not in ("0", "false", "no", "off")   # in-process on cloud
     JOB_TIMEOUT = float(os.getenv("PARSEFLOW_JOB_TIMEOUT", "0") or 0)                       # seconds; 0 = no limit
     JOB_TTL = float(os.getenv("PARSEFLOW_JOB_TTL_HOURS", "24"))*3600
     ALLOWED = set(formats.SUPPORTED); DIRECT = {"pdf", "png", "jpg", "jpeg"}
-    JOBS = {}; POOL = ThreadPoolExecutor(int(os.getenv("PARSEFLOW_WORKERS", "1" if ON_RENDER else "2")))
+    JOBS = {}; POOL = ThreadPoolExecutor(int(os.getenv("PARSEFLOW_WORKERS", "1" if ON_CLOUD else "2")))
     STORE = accounts.Store(DATA/"parseflow.db")
 except Exception:
     import traceback
@@ -441,7 +443,7 @@ def _submit(doc_id, src, name, uid=None):
 def _resume_interrupted():
     """After a restart: documents whose processing was cut off (an upload with no document.json yet) are queued
     again; saved slices (checkpoint/) mean they continue from where they stopped instead of page 1."""
-    if os.getenv("VERCEL") or os.getenv("RENDER") or os.getenv("PARSEFLOW_RESUME", "0" if os.getenv("RENDER") else "1").lower() in ("0", "false", "no", "off"): return []
+    if os.getenv("VERCEL") or os.getenv("RENDER") or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("PARSEFLOW_RESUME", "0" if ON_CLOUD else "1").lower() in ("0", "false", "no", "off"): return []
     if not DATA or not DATA.exists(): return []
     resumed = []
     try:

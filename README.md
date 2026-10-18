@@ -1,6 +1,12 @@
 # ParseFlow
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Lekisha02/parseflow_02)
+
+### 🌐 Live Deployments
+* **Railway (Production Web App):** Configured with dedicated CPU & RAM for fast document parsing
+* **Render Web App:** [https://parseflow-02.onrender.com/](https://parseflow-02.onrender.com/)
+* **Vercel Web App:** [https://parseflow02.vercel.app/](https://parseflow02.vercel.app/)
 
 **ParseFlow** is a document-processing system developed by **Team DEADLOCK** for the **DQCL ParseAnything** problem statement at **DataQuest 3.0**.
 
