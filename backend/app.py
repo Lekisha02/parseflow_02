@@ -49,13 +49,16 @@ try:
             p = Path("/tmp/parseflow_data")
             p.mkdir(parents=True, exist_ok=True)
             return p
+    ON_RENDER = bool(os.getenv("RENDER") or os.getenv("IS_RENDER"))
+    if ON_RENDER and "MALLOC_ARENA_MAX" not in os.environ:
+        os.environ["MALLOC_ARENA_MAX"] = "2"
     DATA = _init_data()
-    MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "0") or 0)*1024*1024)        # 0 = no limit
-    ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "1").lower() not in ("0", "false", "no", "off")   # one worker process per document
+    MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "25" if ON_RENDER else "0") or 0)*1024*1024)        # 0 = no limit
+    ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "0" if ON_RENDER else "1").lower() not in ("0", "false", "no", "off")   # in-process on Render
     JOB_TIMEOUT = float(os.getenv("PARSEFLOW_JOB_TIMEOUT", "0") or 0)                       # seconds; 0 = no limit
     JOB_TTL = float(os.getenv("PARSEFLOW_JOB_TTL_HOURS", "24"))*3600
     ALLOWED = set(formats.SUPPORTED); DIRECT = {"pdf", "png", "jpg", "jpeg"}
-    JOBS = {}; POOL = ThreadPoolExecutor(int(os.getenv("PARSEFLOW_WORKERS", "2")))
+    JOBS = {}; POOL = ThreadPoolExecutor(int(os.getenv("PARSEFLOW_WORKERS", "1" if ON_RENDER else "2")))
     STORE = accounts.Store(DATA/"parseflow.db")
 except Exception:
     import traceback
@@ -412,12 +415,16 @@ def _submit(doc_id, src, name, uid=None):
             if prog.status == "failed":         # a real failure is final: not retried after a restart
                 try: (d/"failed.json").write_text(json.dumps(prog.error or {}))
                 except OSError: pass
+            try:
+                import gc; gc.collect()
+            except Exception:
+                pass
     POOL.submit(run)
 
 def _resume_interrupted():
     """After a restart: documents whose processing was cut off (an upload with no document.json yet) are queued
     again; saved slices (checkpoint/) mean they continue from where they stopped instead of page 1."""
-    if os.getenv("VERCEL") or os.getenv("PARSEFLOW_RESUME", "1").lower() in ("0", "false", "no", "off"): return []
+    if os.getenv("VERCEL") or os.getenv("RENDER") or os.getenv("PARSEFLOW_RESUME", "0" if os.getenv("RENDER") else "1").lower() in ("0", "false", "no", "off"): return []
     if not DATA or not DATA.exists(): return []
     resumed = []
     try:

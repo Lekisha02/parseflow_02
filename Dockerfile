@@ -15,8 +15,8 @@ COPY backend backend
 COPY frontend frontend
 COPY .env.example .env.example
 RUN mkdir -p /data && chmod 777 /data
-ENV PARSEFLOW_DATA_DIR=/data PYTHONUNBUFFERED=1
+ENV PARSEFLOW_DATA_DIR=/data PYTHONUNBUFFERED=1 MALLOC_ARENA_MAX=2 PARSEFLOW_WORKERS=1 PARSEFLOW_ISOLATE=0
 EXPOSE 8000
 WORKDIR /app/backend
-# Supports both Render dynamic $PORT and default port 8000
-CMD ["sh", "-c", "exec python -m uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips '*'"]
+# Supports both Render dynamic $PORT and default port 8000 with 1 worker
+CMD ["sh", "-c", "exec python -m uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --proxy-headers --forwarded-allow-ips '*'"]

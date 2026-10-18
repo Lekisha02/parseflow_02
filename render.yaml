@@ -10,6 +10,16 @@ services:
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: PARSEFLOW_WORKERS
+        value: "1"
+      - key: PARSEFLOW_ISOLATE
+        value: "0"
+      - key: PARSEFLOW_RESUME
+        value: "0"
+      - key: MAX_UPLOAD_MB
+        value: "25"
       - key: PARSEFLOW_DATA_DIR
         value: /data
       - key: PARSEFLOW_SECURE_COOKIE
