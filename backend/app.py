@@ -604,4 +604,32 @@ def page_thumb(doc_id: str, n: int, request: Request):
     if p is None: return err("PF-404", "Not Found", "Page image not found.", 404)
     return FileResponse(p, media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
 
-app.mount("/", StaticFiles(directory=str(ROOT/"frontend"), html=True), name="ui")
+def _mount_ui():
+    candidates = [
+        ROOT / "frontend",
+        ROOT / "public",
+        Path(__file__).parent / "frontend",
+        Path(__file__).parent.parent / "public",
+        Path("frontend"),
+        Path("public"),
+    ]
+    for c in candidates:
+        if c.is_dir() and (c / "index.html").is_file():
+            try:
+                app.mount("/", StaticFiles(directory=str(c), html=True), name="ui")
+                return
+            except Exception:
+                pass
+    for c in candidates:
+        if c.is_dir():
+            try:
+                app.mount("/", StaticFiles(directory=str(c), html=True), name="ui")
+                return
+            except Exception:
+                pass
+    from fastapi.responses import HTMLResponse
+    @app.get("/")
+    def _fallback_ui():
+        return HTMLResponse("<!DOCTYPE html><html><head><title>ParseFlow</title></head><body><h1>ParseFlow API is running</h1><p><a href='/api/health'>Check /api/health</a></p></body></html>")
+
+_mount_ui()

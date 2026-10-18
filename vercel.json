@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "backend/app.py": {
+      "includeFiles": "backend/processing/data/**"
+    }
+  }
+}
