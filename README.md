@@ -4,7 +4,7 @@
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Lekisha02/parseflow_02)
 
 ### 🌐 Live Deployments
-* **Railway (Production Web App):** Configured with dedicated CPU & RAM for fast document parsing
+* **Railway (Primary Production Web App):** [https://parseflow02-production.up.railway.app/](https://parseflow02-production.up.railway.app/)
 * **Render Web App:** [https://parseflow-02.onrender.com/](https://parseflow-02.onrender.com/)
 * **Vercel Web App:** [https://parseflow02.vercel.app/](https://parseflow02.vercel.app/)
 
