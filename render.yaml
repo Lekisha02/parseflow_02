@@ -19,7 +19,17 @@ services:
       - key: PARSEFLOW_RESUME
         value: "0"
       - key: MAX_UPLOAD_MB
-        value: "25"
+        value: "100"
+      - key: OCR_MAX_ZOOM
+        value: "2.0"
+      - key: OCR_MAX_SIDE_PX
+        value: "2200"
+      - key: PARSEFLOW_OCR_WORKERS
+        value: "1"
+      - key: PARSEFLOW_RASTER_SECONDS
+        value: "5"
+      - key: PARSEFLOW_PAGE_CHUNK
+        value: "10"
       - key: PARSEFLOW_DATA_DIR
         value: /data
       - key: PARSEFLOW_SECURE_COOKIE

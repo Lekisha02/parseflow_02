@@ -50,10 +50,21 @@ try:
             p.mkdir(parents=True, exist_ok=True)
             return p
     ON_RENDER = bool(os.getenv("RENDER") or os.getenv("IS_RENDER"))
-    if ON_RENDER and "MALLOC_ARENA_MAX" not in os.environ:
-        os.environ["MALLOC_ARENA_MAX"] = "2"
+    if ON_RENDER:
+        if "MALLOC_ARENA_MAX" not in os.environ:
+            os.environ["MALLOC_ARENA_MAX"] = "2"
+        if "OCR_MAX_ZOOM" not in os.environ:
+            os.environ["OCR_MAX_ZOOM"] = "2.0"
+        if "OCR_MAX_SIDE_PX" not in os.environ:
+            os.environ["OCR_MAX_SIDE_PX"] = "2200"
+        if "PARSEFLOW_OCR_WORKERS" not in os.environ:
+            os.environ["PARSEFLOW_OCR_WORKERS"] = "1"
+        if "PARSEFLOW_RASTER_SECONDS" not in os.environ:
+            os.environ["PARSEFLOW_RASTER_SECONDS"] = "5"
+        if "PARSEFLOW_PAGE_CHUNK" not in os.environ:
+            os.environ["PARSEFLOW_PAGE_CHUNK"] = "10"
     DATA = _init_data()
-    MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "25" if ON_RENDER else "0") or 0)*1024*1024)        # 0 = no limit
+    MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "100" if ON_RENDER else "0") or 0)*1024*1024)        # 0 = no limit
     ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "0" if ON_RENDER else "1").lower() not in ("0", "false", "no", "off")   # in-process on Render
     JOB_TIMEOUT = float(os.getenv("PARSEFLOW_JOB_TIMEOUT", "0") or 0)                       # seconds; 0 = no limit
     JOB_TTL = float(os.getenv("PARSEFLOW_JOB_TTL_HOURS", "24"))*3600
