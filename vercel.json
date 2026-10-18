@@ -1,7 +1,8 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "backend/app.py": {
-      "includeFiles": "backend/processing/data/**"
+      "includeFiles": "{backend/**,public/**}"
     }
   }
 }

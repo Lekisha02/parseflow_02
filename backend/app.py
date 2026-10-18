@@ -6,41 +6,70 @@ from fastapi.responses import JSONResponse, FileResponse, PlainTextResponse, Res
 from fastapi.staticfiles import StaticFiles
 sys.path.insert(0, str(Path(__file__).parent))
 ROOT = Path(__file__).resolve().parent.parent
-def load_env(path, env=os.environ):
-    """KEY=value lines (blank lines, '# comments' and 'KEY=value  # comment' allowed); existing variables win."""
-    try: lines = Path(path).read_text().splitlines()
-    except FileNotFoundError: return
-    for line in lines:
-        if "=" in line and not line.lstrip().startswith("#"):
-            k, v = line.split("=", 1)
-            v = re.sub(r"\s+#.*$", "", v).strip()
-            if v: env.setdefault(k.strip(), v)
-load_env(ROOT/".env")
-from processing import pipeline, ocr, vision, recognizers, runner
-from processing import markdown as mdgen
-from processing import ask as askmod
-from processing import assistant, block_ask, docfiles, engines, formats, llm
-import accounts, mailer
+sys.path.insert(0, str(ROOT))
 
 VERSION = "2.6.0"
-def _init_data():
-    p = Path(os.getenv("PARSEFLOW_DATA_DIR", "/tmp/parseflow_data" if os.getenv("VERCEL") else str(ROOT/"data")))
-    try:
-        p.mkdir(parents=True, exist_ok=True)
-        return p
-    except OSError:
-        p = Path("/tmp/parseflow_data")
-        p.mkdir(parents=True, exist_ok=True)
-        return p
-DATA = _init_data()
-MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "0") or 0)*1024*1024)        # 0 = no limit
-ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "1").lower() not in ("0", "false", "no", "off")   # one worker process per document
-JOB_TIMEOUT = float(os.getenv("PARSEFLOW_JOB_TIMEOUT", "0") or 0)                       # seconds; 0 = no limit
-JOB_TTL = float(os.getenv("PARSEFLOW_JOB_TTL_HOURS", "24"))*3600
-ALLOWED = set(formats.SUPPORTED); DIRECT = {"pdf", "png", "jpg", "jpeg"}
-JOBS = {}; POOL = ThreadPoolExecutor(int(os.getenv("PARSEFLOW_WORKERS", "2")))
 app = FastAPI(title="ParseFlow", version=VERSION)
-STORE = accounts.Store(DATA/"parseflow.db")
+
+_STARTUP_ERROR = None
+DATA = Path("/tmp/parseflow_data")
+MAX_BYTES = 0
+ISOLATE = False
+JOB_TIMEOUT = 0.0
+JOB_TTL = 86400.0
+ALLOWED = {"pdf", "png", "jpg", "jpeg", "docx", "pptx", "xlsx", "md"}
+DIRECT = {"pdf", "png", "jpg", "jpeg"}
+JOBS = {}
+POOL = None
+STORE = None
+
+try:
+    def load_env(path, env=os.environ):
+        """KEY=value lines (blank lines, '# comments' and 'KEY=value  # comment' allowed); existing variables win."""
+        try: lines = Path(path).read_text().splitlines()
+        except FileNotFoundError: return
+        for line in lines:
+            if "=" in line and not line.lstrip().startswith("#"):
+                k, v = line.split("=", 1)
+                v = re.sub(r"\s+#.*$", "", v).strip()
+                if v: env.setdefault(k.strip(), v)
+    load_env(ROOT/".env")
+    from processing import pipeline, ocr, vision, recognizers, runner
+    from processing import markdown as mdgen
+    from processing import ask as askmod
+    from processing import assistant, block_ask, docfiles, engines, formats, llm
+    import accounts, mailer
+
+    def _init_data():
+        p = Path(os.getenv("PARSEFLOW_DATA_DIR", "/tmp/parseflow_data" if os.getenv("VERCEL") else str(ROOT/"data")))
+        try:
+            p.mkdir(parents=True, exist_ok=True)
+            return p
+        except OSError:
+            p = Path("/tmp/parseflow_data")
+            p.mkdir(parents=True, exist_ok=True)
+            return p
+    DATA = _init_data()
+    MAX_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "0") or 0)*1024*1024)        # 0 = no limit
+    ISOLATE = os.getenv("PARSEFLOW_ISOLATE", "1").lower() not in ("0", "false", "no", "off")   # one worker process per document
+    JOB_TIMEOUT = float(os.getenv("PARSEFLOW_JOB_TIMEOUT", "0") or 0)                       # seconds; 0 = no limit
+    JOB_TTL = float(os.getenv("PARSEFLOW_JOB_TTL_HOURS", "24"))*3600
+    ALLOWED = set(formats.SUPPORTED); DIRECT = {"pdf", "png", "jpg", "jpeg"}
+    JOBS = {}; POOL = ThreadPoolExecutor(int(os.getenv("PARSEFLOW_WORKERS", "2")))
+    STORE = accounts.Store(DATA/"parseflow.db")
+except Exception:
+    import traceback
+    _STARTUP_ERROR = traceback.format_exc()
+
+@app.middleware("http")
+async def check_startup(request: Request, call_next):
+    if _STARTUP_ERROR and request.url.path.startswith("/api/") and request.url.path not in ("/api/debug", "/debug"):
+        return JSONResponse(
+            {"ok": False, "version": VERSION, "startup_error": _STARTUP_ERROR},
+            status_code=500,
+        )
+    return await call_next(request)
+
 SECURE_COOKIE = os.getenv("PARSEFLOW_SECURE_COOKIE", "0").lower() in ("1", "true", "yes")
 # X-Forwarded-Host/-Proto are used to build links only behind a proxy you trust (they can be forged otherwise);
 # set PARSEFLOW_PUBLIC_URL in production so emailed links never depend on request headers
@@ -54,7 +83,7 @@ def _safe_id(doc_id): return bool(re.fullmatch(r"[a-f0-9]{12}", doc_id or ""))
 def _cleanup_old():
     """Delete guest documents older than PARSEFLOW_JOB_TTL_HOURS. Documents saved to an account are kept until
     their owner deletes them."""
-    if JOB_TTL <= 0: return
+    if not STORE or JOB_TTL <= 0: return
     now = time.time(); owned = STORE.owned_ids()
     for d in DATA.iterdir():
         try:
@@ -75,8 +104,28 @@ def llm_test():
     return llm.selftest()
 
 
+@app.get("/api/debug")
+@app.get("/debug")
+def debug_info():
+    import platform
+    return {
+        "ok": True,
+        "version": VERSION,
+        "startup_error": _STARTUP_ERROR,
+        "python": sys.version,
+        "platform": platform.platform(),
+        "cwd": os.getcwd(),
+        "root": str(ROOT),
+        "env_vercel": os.getenv("VERCEL"),
+        "files_in_backend": [p.name for p in (ROOT / "backend").iterdir()] if (ROOT / "backend").exists() else [],
+    }
+
+
 @app.get("/api/health")
+@app.get("/health")
 def health():
+    if _STARTUP_ERROR:
+        return JSONResponse(dict(ok=False, version=VERSION, startup_error=_STARTUP_ERROR), status_code=500)
     try:
         import pymupdf; pm = pymupdf.VersionBind
     except Exception: pm = None
@@ -87,6 +136,7 @@ def health():
 
 # ------------------------------------------------------------------------------------------- accounts
 def _user(request):
+    if not STORE: return None
     return STORE.user_for(request.cookies.get(accounts.COOKIE))
 
 def _access(doc_id):
@@ -98,6 +148,7 @@ def _hash(t): return accounts._tok(t) if t else ""
 def _is_owner(request, doc_id):
     """The account that saved the document, or the browser that uploaded it as a guest."""
     if not _safe_id(doc_id): return False
+    if not STORE: return True
     owner = STORE.owner(doc_id)
     if owner is not None:
         u = _user(request); return bool(u and u["id"] == owner)
